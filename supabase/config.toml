@@ -1,1 +1,16 @@
 project_id = "sysemmopgzgvmepuzcrb"
+
+[functions.simulate-data]
+verify_jwt = false
+
+[functions.traffic-predict]
+verify_jwt = false
+
+[functions.flood-simulate]
+verify_jwt = false
+
+[functions.accident-hotspots]
+verify_jwt = false
+
+[functions.emergency-route]
+verify_jwt = false

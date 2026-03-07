@@ -14,7 +14,186 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accident_data: {
+        Row: {
+          description: string | null
+          id: string
+          lat: number
+          lng: number
+          reported_at: string
+          severity: string
+          zone_id: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          lat: number
+          lng: number
+          reported_at?: string
+          severity: string
+          zone_id: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          reported_at?: string
+          severity?: string
+          zone_id?: string
+        }
+        Relationships: []
+      }
+      alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          message: string
+          severity: string
+          zone_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          severity: string
+          zone_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          severity?: string
+          zone_id?: string
+        }
+        Relationships: []
+      }
+      city_zones: {
+        Row: {
+          created_at: string
+          elevation: number
+          id: string
+          lat: number
+          lng: number
+          name: string
+          zone_id: string
+        }
+        Insert: {
+          created_at?: string
+          elevation?: number
+          id?: string
+          lat?: number
+          lng?: number
+          name: string
+          zone_id: string
+        }
+        Update: {
+          created_at?: string
+          elevation?: number
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          zone_id?: string
+        }
+        Relationships: []
+      }
+      emergency_units: {
+        Row: {
+          id: string
+          lat: number
+          lng: number
+          status: string
+          unit_id: string
+          unit_type: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lat?: number
+          lng?: number
+          status?: string
+          unit_id: string
+          unit_type: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lat?: number
+          lng?: number
+          status?: string
+          unit_id?: string
+          unit_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      traffic_data: {
+        Row: {
+          avg_speed: number
+          congestion_level: number
+          id: string
+          prediction_60min: number
+          recorded_at: string
+          vehicle_count: number
+          zone_id: string
+        }
+        Insert: {
+          avg_speed?: number
+          congestion_level?: number
+          id?: string
+          prediction_60min?: number
+          recorded_at?: string
+          vehicle_count?: number
+          zone_id: string
+        }
+        Update: {
+          avg_speed?: number
+          congestion_level?: number
+          id?: string
+          prediction_60min?: number
+          recorded_at?: string
+          vehicle_count?: number
+          zone_id?: string
+        }
+        Relationships: []
+      }
+      weather_data: {
+        Row: {
+          humidity: number | null
+          id: string
+          rainfall: number
+          recorded_at: string
+          temperature: number | null
+          wind_speed: number | null
+          zone_id: string
+        }
+        Insert: {
+          humidity?: number | null
+          id?: string
+          rainfall?: number
+          recorded_at?: string
+          temperature?: number | null
+          wind_speed?: number | null
+          zone_id: string
+        }
+        Update: {
+          humidity?: number | null
+          id?: string
+          rainfall?: number
+          recorded_at?: string
+          temperature?: number | null
+          wind_speed?: number | null
+          zone_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

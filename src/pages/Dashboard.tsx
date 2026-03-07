@@ -1,15 +1,18 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSimulation } from '@/hooks/useSimulation';
 import City3DView from '@/components/City3DView';
+import CityMapView from '@/components/CityMapView';
 import TrafficPanel from '@/components/TrafficPanel';
 import FloodPanel from '@/components/FloodPanel';
 import EmergencyPanel from '@/components/EmergencyPanel';
 import AlertsPanel from '@/components/AlertsPanel';
 import AnalyticsPanel from '@/components/AnalyticsPanel';
-import { Activity, Radio } from 'lucide-react';
+import { Activity, Radio, Map, Box, Database, Wifi } from 'lucide-react';
 
 export default function Dashboard() {
-  const { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory } = useSimulation(3000);
+  const { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory, useBackend } = useSimulation(5000);
+  const [viewMode, setViewMode] = useState<'3d' | 'map'>('map');
 
   return (
     <div className="min-h-screen bg-background grid-bg scanline">
@@ -25,6 +28,32 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          {/* View toggle */}
+          <div className="flex items-center gap-1 bg-secondary rounded-md p-1">
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech transition-colors ${viewMode === 'map' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <Map className="w-3 h-3" /> Map
+            </button>
+            <button
+              onClick={() => setViewMode('3d')}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech transition-colors ${viewMode === '3d' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <Box className="w-3 h-3" /> 3D
+            </button>
+          </div>
+          {/* Backend indicator */}
+          <div className="flex items-center gap-1">
+            {useBackend ? (
+              <Database className="w-3 h-3 text-neon-cyan" />
+            ) : (
+              <Wifi className="w-3 h-3 text-muted-foreground" />
+            )}
+            <span className="text-xs font-mono-tech text-muted-foreground">
+              {useBackend ? 'CLOUD' : 'LOCAL'}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <Radio className="w-3 h-3 text-neon-green animate-pulse-neon" />
             <span className="text-xs font-mono-tech text-neon-green">LIVE</span>
@@ -37,7 +66,7 @@ export default function Dashboard() {
 
       {/* Main Layout */}
       <div className="p-4 grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-60px)]">
-        {/* Left sidebar - panels */}
+        {/* Left sidebar */}
         <div className="lg:col-span-1 space-y-4 overflow-y-auto">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
             <TrafficPanel traffic={traffic} history={trafficHistory} />
@@ -47,10 +76,14 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* Center - 3D View */}
+        {/* Center - Map or 3D View */}
         <div className="lg:col-span-2 min-h-[400px]">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="h-full">
-            <City3DView traffic={traffic} flood={flood} accidents={accidents} />
+            {viewMode === 'map' ? (
+              <CityMapView traffic={traffic} flood={flood} accidents={accidents} emergencyUnits={emergencyUnits} />
+            ) : (
+              <City3DView traffic={traffic} flood={flood} accidents={accidents} />
+            )}
           </motion.div>
         </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useSimulation } from '@/hooks/useSimulation';
 import City3DView from '@/components/City3DView';
@@ -13,6 +13,11 @@ import { Activity, Radio, Map, Box, Database, Wifi } from 'lucide-react';
 export default function Dashboard() {
   const { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory, useBackend } = useSimulation(5000);
   const [viewMode, setViewMode] = useState<'3d' | 'map'>('map');
+  const [emergencyRoute, setEmergencyRoute] = useState<{ lat: number; lng: number }[]>([]);
+  const handleRouteCalculated = useCallback((route: { lat: number; lng: number }[]) => {
+    setEmergencyRoute(route);
+    setViewMode('map');
+  }, []);
 
   return (
     <div className="min-h-screen bg-background grid-bg scanline">

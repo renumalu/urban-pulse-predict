@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity, Shield, Zap, Brain, CloudRain, Car, MapPin, Radio,
   BarChart3, AlertTriangle, Users, ArrowRight, ChevronDown, Globe,
-  Cpu, Database, Lock, Eye, Gauge, Ambulance
+  Cpu, Database, Lock, Eye, Gauge, Ambulance, HeartPulse, Leaf,
+  Fuel, Briefcase, CheckCircle2, XCircle, Sparkles
 } from 'lucide-react';
 
 const STATS = [

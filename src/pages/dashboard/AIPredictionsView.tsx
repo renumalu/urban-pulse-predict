@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Radio, ArrowUp, MapPin } from 'lucide-react';
+import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Radio, ArrowUp, MapPin, CloudRain, AlertTriangle, Droplets } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { INDIAN_ZONES, getZoneName, ZONE_MAP } from '@/lib/india-zones';
@@ -18,8 +18,18 @@ interface Prediction {
   factors: string[] | null;
 }
 
+interface WeatherData {
+  zone_id: string;
+  rainfall: number;
+  humidity: number | null;
+  temperature: number | null;
+}
+
+type FloodRisk = 'extreme' | 'high' | 'moderate' | 'low';
+
 export default function AIPredictionsView() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [weatherMap, setWeatherMap] = useState<Record<string, WeatherData>>({});
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLive, setIsLive] = useState(false);
@@ -36,14 +46,29 @@ export default function AIPredictionsView() {
   const fetchPredictions = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: predData, error } = await supabase
-        .from('traffic_predictions')
-        .select('*')
-        .order('current_congestion', { ascending: false })
-        .limit(36);
-      if (error) throw error;
+      const [predResult, weatherResult] = await Promise.all([
+        supabase
+          .from('traffic_predictions')
+          .select('*')
+          .order('current_congestion', { ascending: false })
+          .limit(36),
+        supabase
+          .from('weather_data')
+          .select('zone_id, rainfall, humidity, temperature')
+          .order('recorded_at', { ascending: false })
+          .limit(36)
+      ]);
 
-      setPredictions((predData || []).map(mapPrediction));
+      if (predResult.error) throw predResult.error;
+
+      // Build weather lookup map
+      const wMap: Record<string, WeatherData> = {};
+      (weatherResult.data || []).forEach(w => {
+        if (!wMap[w.zone_id]) wMap[w.zone_id] = w;
+      });
+      setWeatherMap(wMap);
+
+      setPredictions((predResult.data || []).map(mapPrediction));
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to fetch predictions:', err);
@@ -72,6 +97,10 @@ export default function AIPredictionsView() {
         });
         setLastUpdated(new Date());
       })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'weather_data' }, (payload) => {
+        const w = payload.new as WeatherData;
+        setWeatherMap(prev => ({ ...prev, [w.zone_id]: w }));
+      })
       .subscribe((status) => {
         setIsLive(status === 'SUBSCRIBED');
         if (status === 'SUBSCRIBED') toast.success('Live predictions connected', { duration: 2000 });
@@ -79,10 +108,20 @@ export default function AIPredictionsView() {
     return () => { supabase.removeChannel(channel); };
   }, [mapPrediction]);
 
+  // Calculate flood risk based on rainfall
+  const getFloodRisk = (rainfall: number): { level: FloodRisk; label: string; color: string; bgColor: string } => {
+    if (rainfall >= 50) return { level: 'extreme', label: 'EXTREME', color: 'text-red-400', bgColor: 'bg-red-500/20' };
+    if (rainfall >= 30) return { level: 'high', label: 'HIGH', color: 'text-neon-orange', bgColor: 'bg-neon-orange/20' };
+    if (rainfall >= 15) return { level: 'moderate', label: 'MODERATE', color: 'text-yellow-400', bgColor: 'bg-yellow-500/20' };
+    return { level: 'low', label: 'LOW', color: 'text-neon-green', bgColor: 'bg-neon-green/20' };
+  };
+
   const avgCurrent = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.current_congestion, 0) / predictions.length * 100) : 0;
   const avg1h = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.predicted_60min, 0) / predictions.length * 100) : 0;
   const criticalCount = predictions.filter(p => p.predicted_60min > 0.7).length;
-  const avgConfidence = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.confidence, 0) / predictions.length) : 0;
+  
+  // Count monsoon alerts
+  const monsoonAlerts = Object.values(weatherMap).filter(w => w.rainfall >= 30).length;
 
   const getTrendLabel = (trend: string) => {
     if (trend === 'rising' || trend === 'increasing') return { label: 'Rising', icon: <TrendingUp className="w-4 h-4" />, color: 'text-neon-red' };
@@ -126,17 +165,37 @@ export default function AIPredictionsView() {
       {/* Stats Row */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { value: `${avgCurrent}%`, label: 'Current', color: 'text-neon-cyan' },
-          { value: `${avg1h}%`, label: '1h Pred', color: 'text-neon-purple' },
-          { value: `${criticalCount}`, label: 'Critical', color: 'text-neon-red' },
-          { value: `${avgConfidence}%`, label: 'Confidence', color: 'text-neon-green' },
+          { value: `${avgCurrent}%`, label: 'Current', color: 'text-neon-cyan', icon: null },
+          { value: `${avg1h}%`, label: '1h Pred', color: 'text-neon-purple', icon: null },
+          { value: `${criticalCount}`, label: 'Critical', color: 'text-neon-red', icon: null },
+          { value: `${monsoonAlerts}`, label: 'Flood Risk', color: monsoonAlerts > 0 ? 'text-neon-orange' : 'text-neon-green', icon: <CloudRain className="w-3 h-3" /> },
         ].map((s, i) => (
           <div key={i} className="bg-secondary rounded-lg p-2.5 text-center">
-            <div className={`font-mono-tech text-lg ${s.color}`}>{s.value}</div>
+            <div className={`font-mono-tech text-lg ${s.color} flex items-center justify-center gap-1`}>
+              {s.icon}
+              {s.value}
+            </div>
             <div className="text-[10px] text-muted-foreground font-mono-tech">{s.label}</div>
           </div>
         ))}
       </div>
+
+      {/* Monsoon Alert Banner */}
+      {monsoonAlerts > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-neon-orange/10 border border-neon-orange/30 rounded-lg p-3 flex items-center gap-3"
+        >
+          <AlertTriangle className="w-5 h-5 text-neon-orange flex-shrink-0" />
+          <div className="flex-1">
+            <span className="font-display text-xs text-neon-orange">MONSOON ALERT</span>
+            <p className="text-[11px] text-muted-foreground font-mono-tech">
+              {monsoonAlerts} state{monsoonAlerts > 1 ? 's' : ''} experiencing heavy rainfall — increased flood risk
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Prediction Cards */}
       <div className="space-y-3">
@@ -153,6 +212,9 @@ export default function AIPredictionsView() {
           predictions.map((p, i) => {
             const trend = getTrendLabel(p.trend);
             const uniqueKey = `${p.zone_id}-${i}`;
+            const weather = weatherMap[p.zone_id];
+            const rainfall = weather?.rainfall ?? 0;
+            const floodRisk = getFloodRisk(rainfall);
             const bars = [
               { label: 'Now', value: p.current_congestion },
               { label: '30m', value: p.predicted_30min },
@@ -165,9 +227,13 @@ export default function AIPredictionsView() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="bg-card border border-border rounded-lg p-3.5 space-y-2.5 border-glow"
+                className={`bg-card border rounded-lg p-3.5 space-y-2.5 ${
+                  floodRisk.level === 'extreme' ? 'border-red-500/50' :
+                  floodRisk.level === 'high' ? 'border-neon-orange/50' :
+                  'border-border'
+                }`}
               >
-                {/* Zone name + capital + trend */}
+                {/* Zone name + capital + trend + flood risk */}
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="font-display text-sm tracking-wide text-foreground">{p.zone_name}</span>
@@ -178,11 +244,44 @@ export default function AIPredictionsView() {
                       </span>
                     )}
                   </div>
-                  <div className={`flex items-center gap-1 ${trend.color}`}>
-                    {trend.icon}
-                    <span className="text-xs font-mono-tech">{trend.label}</span>
+                  <div className="flex items-center gap-2">
+                    {/* Flood Risk Badge */}
+                    {rainfall > 0 && (
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${floodRisk.bgColor}`}>
+                        <Droplets className={`w-3 h-3 ${floodRisk.color}`} />
+                        <span className={`text-[10px] font-mono-tech ${floodRisk.color}`}>
+                          {Math.round(rainfall)}mm
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex items-center gap-1 ${trend.color}`}>
+                      {trend.icon}
+                      <span className="text-xs font-mono-tech">{trend.label}</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Flood Risk Indicator Bar */}
+                {rainfall >= 15 && (
+                  <div className="flex items-center gap-2 py-1">
+                    <CloudRain className={`w-3.5 h-3.5 ${floodRisk.color}`} />
+                    <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <motion.div
+                        className={`h-full rounded-full ${
+                          floodRisk.level === 'extreme' ? 'bg-red-500' :
+                          floodRisk.level === 'high' ? 'bg-neon-orange' :
+                          'bg-yellow-500'
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (rainfall / 60) * 100)}%` }}
+                        transition={{ duration: 0.6 }}
+                      />
+                    </div>
+                    <span className={`text-[10px] font-mono-tech ${floodRisk.color}`}>
+                      {floodRisk.label} RISK
+                    </span>
+                  </div>
+                )}
 
                 {/* Congestion bars */}
                 <div className="grid grid-cols-4 gap-2">
@@ -207,7 +306,12 @@ export default function AIPredictionsView() {
                 {/* Factors + confidence */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1.5 flex-1">
-                    {(p.factors || []).slice(0, 3).map(f => (
+                    {rainfall >= 15 && (
+                      <span className={`text-[10px] font-mono-tech px-2 py-0.5 rounded ${floodRisk.bgColor} ${floodRisk.color}`}>
+                        monsoon
+                      </span>
+                    )}
+                    {(p.factors || []).slice(0, 2).map(f => (
                       <span key={f} className="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-secondary text-muted-foreground">
                         {f.replace(/_/g, ' ')}
                       </span>

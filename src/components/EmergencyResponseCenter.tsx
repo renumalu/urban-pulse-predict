@@ -378,7 +378,7 @@ export default function EmergencyResponseCenter() {
                 ))}
               </motion.div>
             )}
-          </AnimatePresence>
+          {/* end tabs */}
         </div>
       </div>
     </div>

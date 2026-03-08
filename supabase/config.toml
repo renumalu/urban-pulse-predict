@@ -14,3 +14,30 @@ verify_jwt = false
 
 [functions.emergency-route]
 verify_jwt = false
+
+[functions.fetch-weather]
+verify_jwt = false
+
+[functions.api-traffic]
+verify_jwt = false
+
+[functions.api-weather]
+verify_jwt = false
+
+[functions.api-alerts]
+verify_jwt = false
+
+[functions.api-emergency]
+verify_jwt = false
+
+[functions.api-accidents]
+verify_jwt = false
+
+[functions.api-reports]
+verify_jwt = false
+
+[functions.api-zones]
+verify_jwt = false
+
+[functions.api-dashboard]
+verify_jwt = false

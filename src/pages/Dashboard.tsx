@@ -1,146 +1,131 @@
 import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { Routes, Route } from 'react-router-dom';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { useSimulation } from '@/hooks/useSimulation';
-import City3DView from '@/components/City3DView';
-import CityMapView from '@/components/CityMapView';
-import TrafficPanel from '@/components/TrafficPanel';
-import FloodPanel from '@/components/FloodPanel';
-import EmergencyPanel from '@/components/EmergencyPanel';
-import AlertsPanel from '@/components/AlertsPanel';
-import AnalyticsPanel from '@/components/AnalyticsPanel';
-import TrafficPredictionPanel from '@/components/TrafficPredictionPanel';
-import PredictionTimeline from '@/components/PredictionTimeline';
-import ImpactMetricsPanel from '@/components/ImpactMetricsPanel';
-import DataStreamStatus from '@/components/DataStreamStatus';
-import SolutionsPanel from '@/components/SolutionsPanel';
+import DashboardOverview from '@/pages/dashboard/DashboardOverview';
+import TrafficView from '@/pages/dashboard/TrafficView';
+import FloodView from '@/pages/dashboard/FloodView';
+import EmergencyView from '@/pages/dashboard/EmergencyView';
+import AnalyticsView from '@/pages/dashboard/AnalyticsView';
 import AIChatWidget from '@/components/AIChatWidget';
-import { Activity, Radio, Map, Box, Database, Wifi, MessageSquarePlus, LogOut } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { Box, Map, Database, Wifi } from 'lucide-react';
 
 export default function Dashboard() {
   const { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory, useBackend } = useSimulation(5000);
-  const { signOut, user } = useAuth();
-  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'3d' | 'map'>('map');
   const [emergencyRoute, setEmergencyRoute] = useState<{ lat: number; lng: number }[]>([]);
+
   const handleRouteCalculated = useCallback((route: { lat: number; lng: number }[]) => {
     setEmergencyRoute(route);
     setViewMode('map');
   }, []);
 
   return (
-    <div className="min-h-screen bg-background grid-bg scanline">
-      {/* Header */}
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-primary/20 flex items-center justify-center glow-blue">
-            <Activity className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-display text-lg tracking-widest text-primary text-glow-blue">URBANPULSE</h1>
-            <p className="text-xs text-muted-foreground font-mono-tech -mt-0.5">Predictive Digital Twin</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* View toggle */}
-          <div className="flex items-center gap-1 bg-secondary rounded-md p-1">
-            <button
-              onClick={() => setViewMode('map')}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech transition-colors ${viewMode === 'map' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              <Map className="w-3 h-3" /> Map
-            </button>
-            <button
-              onClick={() => setViewMode('3d')}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech transition-colors ${viewMode === '3d' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              <Box className="w-3 h-3" /> 3D
-            </button>
-          </div>
-          {/* Backend indicator */}
-          <div className="flex items-center gap-1">
-            {useBackend ? (
-              <Database className="w-3 h-3 text-neon-cyan" />
-            ) : (
-              <Wifi className="w-3 h-3 text-muted-foreground" />
-            )}
-            <span className="text-xs font-mono-tech text-muted-foreground">
-              {useBackend ? 'CLOUD' : 'LOCAL'}
-            </span>
-          </div>
-          <button
-            onClick={() => navigate('/reports')}
-            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
-          >
-            <MessageSquarePlus className="w-3 h-3" /> Reports
-          </button>
-          <div className="flex items-center gap-2">
-            <Radio className="w-3 h-3 text-neon-green animate-pulse-neon" />
-            <span className="text-xs font-mono-tech text-neon-green">LIVE</span>
-          </div>
-          <span className="text-xs font-mono-tech text-muted-foreground">
-            {new Date().toLocaleTimeString()}
-          </span>
-          <button onClick={signOut} className="text-muted-foreground hover:text-foreground">
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background grid-bg scanline">
+        <DashboardSidebar />
+        
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <header className="h-12 flex items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-4 shrink-0">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+              <span className="text-xs font-mono-tech text-muted-foreground">
+                {new Date().toLocaleTimeString()}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {/* Backend indicator */}
+              <div className="flex items-center gap-1">
+                {useBackend ? (
+                  <Database className="w-3 h-3 text-neon-cyan" />
+                ) : (
+                  <Wifi className="w-3 h-3 text-muted-foreground" />
+                )}
+                <span className="text-xs font-mono-tech text-muted-foreground">
+                  {useBackend ? 'CLOUD' : 'LOCAL'}
+                </span>
+              </div>
 
-      {/* Main Layout */}
-      <div className="p-4 grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-60px)]">
-        {/* Left sidebar */}
-        <div className="lg:col-span-1 space-y-4 overflow-y-auto">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-            <TrafficPanel traffic={traffic} history={trafficHistory} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-            <FloodPanel flood={flood} history={floodHistory} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            <SolutionsPanel traffic={traffic} flood={flood} emergencyUnits={emergencyUnits} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-            <DataStreamStatus />
-          </motion.div>
+              {/* View toggle */}
+              <div className="flex items-center gap-1 bg-secondary rounded-md p-1">
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech transition-colors ${viewMode === 'map' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <Map className="w-3 h-3" /> Map
+                </button>
+                <button
+                  onClick={() => setViewMode('3d')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech transition-colors ${viewMode === '3d' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <Box className="w-3 h-3" /> 3D
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Main content area */}
+          <main className="flex-1 overflow-hidden">
+            <Routes>
+              <Route index element={
+                <DashboardOverview
+                  traffic={traffic}
+                  flood={flood}
+                  accidents={accidents}
+                  emergencyUnits={emergencyUnits}
+                  alerts={alerts}
+                  emergencyRoute={emergencyRoute}
+                  viewMode={viewMode}
+                />
+              } />
+              <Route path="traffic" element={
+                <TrafficView
+                  traffic={traffic}
+                  flood={flood}
+                  accidents={accidents}
+                  emergencyUnits={emergencyUnits}
+                  trafficHistory={trafficHistory}
+                  viewMode={viewMode}
+                />
+              } />
+              <Route path="flood" element={
+                <FloodView
+                  traffic={traffic}
+                  flood={flood}
+                  accidents={accidents}
+                  emergencyUnits={emergencyUnits}
+                  floodHistory={floodHistory}
+                  viewMode={viewMode}
+                />
+              } />
+              <Route path="emergency" element={
+                <EmergencyView
+                  traffic={traffic}
+                  flood={flood}
+                  accidents={accidents}
+                  emergencyUnits={emergencyUnits}
+                  alerts={alerts}
+                  viewMode={viewMode}
+                  onRouteCalculated={handleRouteCalculated}
+                  emergencyRoute={emergencyRoute}
+                />
+              } />
+              <Route path="analytics" element={
+                <AnalyticsView
+                  traffic={traffic}
+                  flood={flood}
+                  accidents={accidents}
+                />
+              } />
+            </Routes>
+          </main>
         </div>
 
-        {/* Center - Map or 3D View */}
-        <div className="lg:col-span-2 min-h-[400px]">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="h-full">
-            {viewMode === 'map' ? (
-              <CityMapView traffic={traffic} flood={flood} accidents={accidents} emergencyUnits={emergencyUnits} emergencyRoute={emergencyRoute} />
-            ) : (
-              <City3DView traffic={traffic} flood={flood} accidents={accidents} />
-            )}
-          </motion.div>
-        </div>
-
-        {/* Right sidebar */}
-        <div className="lg:col-span-1 space-y-4 overflow-y-auto">
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}>
-            <TrafficPredictionPanel />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-            <AlertsPanel alerts={alerts} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
-            <EmergencyPanel units={emergencyUnits} onRouteCalculated={handleRouteCalculated} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-            <ImpactMetricsPanel traffic={traffic} flood={flood} accidents={accidents} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
-            <AnalyticsPanel traffic={traffic} flood={flood} accidents={accidents} />
-          </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-            <PredictionTimeline />
-          </motion.div>
-        </div>
+        <AIChatWidget />
       </div>
-
-      <AIChatWidget />
-    </div>
+    </SidebarProvider>
   );
 }

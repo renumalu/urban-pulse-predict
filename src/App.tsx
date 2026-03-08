@@ -37,7 +37,7 @@ function AppRoutes() {
       <Route path="/" element={<LandingRoute><LandingPage /></LandingRoute>} />
       <Route path="/landing" element={<LandingRoute><LandingPage /></LandingRoute>} />
       <Route path="/auth" element={<PublicRoute><AuthPage /></PublicRoute>} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><CitizenReports /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>

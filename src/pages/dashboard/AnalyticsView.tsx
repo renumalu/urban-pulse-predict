@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import AnalyticsPanel from '@/components/AnalyticsPanel';
 import ImpactMetricsPanel from '@/components/ImpactMetricsPanel';
+import HistoricalTrendsChart from '@/components/HistoricalTrendsChart';
 import type { TrafficData, FloodData, AccidentData } from '@/lib/simulation';
 import { BarChart3, TrendingUp, Download, FileSpreadsheet } from 'lucide-react';
 import { exportTrafficCSV, exportFloodCSV, exportAccidentsCSV, exportFullReport } from '@/lib/csv-export';
@@ -60,6 +61,11 @@ export default function AnalyticsView({ traffic, flood, accidents }: AnalyticsVi
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Historical Trends Chart */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <HistoricalTrendsChart />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>

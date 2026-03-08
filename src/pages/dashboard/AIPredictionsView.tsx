@@ -152,6 +152,7 @@ export default function AIPredictionsView() {
         ) : (
           predictions.map((p, i) => {
             const trend = getTrendLabel(p.trend);
+            const uniqueKey = `${p.zone_id}-${i}`;
             const bars = [
               { label: 'Now', value: p.current_congestion },
               { label: '30m', value: p.predicted_30min },
@@ -160,7 +161,7 @@ export default function AIPredictionsView() {
             ];
             return (
               <motion.div
-                key={p.zone_id}
+                key={uniqueKey}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}

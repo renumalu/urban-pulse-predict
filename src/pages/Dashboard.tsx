@@ -13,6 +13,7 @@ import ControlCenterView from '@/pages/dashboard/ControlCenterView';
 import LiveAlertsView from '@/pages/dashboard/LiveAlertsView';
 import CrisisSolutionView from '@/pages/dashboard/CrisisSolutionView';
 import DataStreamsView from '@/pages/dashboard/DataStreamsView';
+import EmergencyResponseView from '@/pages/dashboard/EmergencyResponseView';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Box, Map, Database, Wifi } from 'lucide-react';
 
@@ -126,6 +127,7 @@ export default function Dashboard() {
                 <CrisisSolutionView traffic={traffic} flood={flood} emergencyUnits={emergencyUnits} />
               } />
               <Route path="streams" element={<DataStreamsView />} />
+              <Route path="response" element={<EmergencyResponseView />} />
             </Routes>
           </main>
         </div>

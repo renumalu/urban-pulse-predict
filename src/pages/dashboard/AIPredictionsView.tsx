@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Clock, Target, AlertTriangle, Droplets, Car, Radio } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Target, AlertTriangle, Radio, ArrowUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -23,13 +23,10 @@ export default function AIPredictionsView() {
   const [isLive, setIsLive] = useState(false);
   const [zoneMap, setZoneMap] = useState<Map<string, string>>(new Map());
 
-  // Fetch zone names once
   useEffect(() => {
     const fetchZones = async () => {
       const { data } = await supabase.from('city_zones').select('zone_id, name');
-      if (data) {
-        setZoneMap(new Map(data.map(z => [z.zone_id, z.name])));
-      }
+      if (data) setZoneMap(new Map(data.map(z => [z.zone_id, z.name])));
     };
     fetchZones();
   }, []);
@@ -37,20 +34,17 @@ export default function AIPredictionsView() {
   const fetchPredictions = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: predData, error: predError } = await supabase
+      const { data: predData, error } = await supabase
         .from('traffic_predictions')
         .select('*')
         .order('current_congestion', { ascending: false })
         .limit(36);
+      if (error) throw error;
 
-      if (predError) throw predError;
-
-      const merged = (predData || []).map(p => ({
+      setPredictions((predData || []).map(p => ({
         ...p,
         zone_name: zoneMap.get(p.zone_id) || p.zone_id,
-      }));
-
-      setPredictions(merged);
+      })));
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to fetch predictions:', err);
@@ -59,75 +53,44 @@ export default function AIPredictionsView() {
     }
   }, [zoneMap]);
 
-  // Initial fetch
   useEffect(() => {
-    if (zoneMap.size > 0) {
-      fetchPredictions();
-    }
+    if (zoneMap.size > 0) fetchPredictions();
   }, [zoneMap, fetchPredictions]);
 
   // Realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel('predictions-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'traffic_predictions',
-        },
-        (payload) => {
-          const newPred = payload.new as any;
-          setPredictions(prev => {
-            // Update or add the prediction
-            const exists = prev.find(p => p.zone_id === newPred.zone_id);
-            const updated = exists
-              ? prev.map(p => p.zone_id === newPred.zone_id 
-                  ? { ...newPred, zone_name: zoneMap.get(newPred.zone_id) || newPred.zone_id }
-                  : p)
-              : [...prev, { ...newPred, zone_name: zoneMap.get(newPred.zone_id) || newPred.zone_id }];
-            
-            // Sort by congestion and limit to 36
-            return updated
-              .sort((a, b) => b.current_congestion - a.current_congestion)
-              .slice(0, 36);
-          });
-          setLastUpdated(new Date());
-        }
-      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'traffic_predictions' }, (payload) => {
+        const n = payload.new as any;
+        setPredictions(prev => {
+          const updated = prev.find(p => p.zone_id === n.zone_id)
+            ? prev.map(p => p.zone_id === n.zone_id ? { ...n, zone_name: zoneMap.get(n.zone_id) || n.zone_id } : p)
+            : [...prev, { ...n, zone_name: zoneMap.get(n.zone_id) || n.zone_id }];
+          return updated.sort((a, b) => b.current_congestion - a.current_congestion).slice(0, 36);
+        });
+        setLastUpdated(new Date());
+      })
       .subscribe((status) => {
         setIsLive(status === 'SUBSCRIBED');
-        if (status === 'SUBSCRIBED') {
-          toast.success('Live updates connected', { duration: 2000 });
-        }
+        if (status === 'SUBSCRIBED') toast.success('Live updates connected', { duration: 2000 });
       });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [zoneMap]);
 
-  const avgConfidence = predictions.length
-    ? Math.round(predictions.reduce((s, p) => s + p.confidence, 0) / predictions.length)
-    : 0;
-  const risingCount = predictions.filter(p => p.trend === 'rising').length;
-  const fallingCount = predictions.filter(p => p.trend === 'falling').length;
+  const avgCurrent = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.current_congestion, 0) / predictions.length * 100) : 0;
+  const avg1h = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.predicted_60min, 0) / predictions.length * 100) : 0;
   const criticalCount = predictions.filter(p => p.predicted_60min > 0.7).length;
+  const avgConfidence = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.confidence, 0) / predictions.length) : 0;
 
-  const getTrendIcon = (trend: string) => {
-    if (trend === 'rising') return <TrendingUp className="w-4 h-4 text-neon-red" />;
-    if (trend === 'falling') return <TrendingDown className="w-4 h-4 text-neon-green" />;
-    return <Minus className="w-4 h-4 text-muted-foreground" />;
+  const getTrendLabel = (trend: string) => {
+    if (trend === 'rising' || trend === 'increasing') return { label: 'Rising', icon: <TrendingUp className="w-4 h-4" />, color: 'text-neon-red' };
+    if (trend === 'falling' || trend === 'decreasing' || trend === 'clearing') return { label: 'Falling', icon: <TrendingDown className="w-4 h-4" />, color: 'text-neon-green' };
+    if (trend === 'peak') return { label: 'Peak', icon: <ArrowUp className="w-4 h-4" />, color: 'text-neon-orange' };
+    return { label: 'Stable', icon: <Minus className="w-4 h-4" />, color: 'text-muted-foreground' };
   };
 
-  const getStatusColor = (value: number) => {
-    if (value > 0.7) return 'text-neon-red';
-    if (value > 0.4) return 'text-neon-orange';
-    return 'text-neon-green';
-  };
-
-  const getStatusDot = (value: number) => {
+  const getBarColor = (value: number) => {
     if (value > 0.7) return 'bg-neon-red';
     if (value > 0.4) return 'bg-neon-orange';
     return 'bg-neon-green';
@@ -138,189 +101,123 @@ export default function AIPredictionsView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-neon-purple/20 flex items-center justify-center">
-            <Brain className="w-5 h-5 text-neon-purple" />
-          </div>
-          <div>
-            <h2 className="font-display text-lg tracking-wider text-neon-purple">AI PREDICTIONS</h2>
-            <p className="text-xs text-muted-foreground font-mono-tech">
-              Powered by Gemini Flash • Real-time traffic forecasting
-            </p>
-          </div>
+          <Brain className="w-6 h-6 text-neon-purple" />
+          <h2 className="font-display text-base tracking-wider text-neon-purple">AI PREDICTIONS</h2>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Live indicator */}
-          <div className="flex items-center gap-2">
-            <Radio className={`w-3.5 h-3.5 ${isLive ? 'text-neon-green animate-pulse' : 'text-muted-foreground'}`} />
-            <span className={`text-xs font-mono-tech ${isLive ? 'text-neon-green' : 'text-muted-foreground'}`}>
-              {isLive ? 'LIVE' : 'CONNECTING...'}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Radio className={`w-3 h-3 ${isLive ? 'text-neon-green animate-pulse' : 'text-muted-foreground'}`} />
+            <span className={`text-[10px] font-mono-tech ${isLive ? 'text-neon-green' : 'text-muted-foreground'}`}>
+              {isLive ? 'LIVE' : '...'}
             </span>
           </div>
           <button
             onClick={fetchPredictions}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors disabled:opacity-50 text-xs font-mono-tech"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="text-xs font-mono-tech">Refresh</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Generate
           </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card border border-border rounded-lg p-4 border-glow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Target className="w-4 h-4 text-neon-cyan" />
-            <span className="text-xs text-muted-foreground font-mono-tech">AVG CONFIDENCE</span>
+      {/* Stats Row */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { value: `${avgCurrent}%`, label: 'Current', color: 'text-neon-cyan' },
+          { value: `${avg1h}%`, label: '1h Pred', color: 'text-neon-purple' },
+          { value: `${criticalCount}`, label: 'Critical', color: 'text-neon-red' },
+          { value: `${avgConfidence}%`, label: 'Confidence', color: 'text-neon-green' },
+        ].map((s, i) => (
+          <div key={i} className="bg-secondary rounded-lg p-2.5 text-center">
+            <div className={`font-mono-tech text-lg ${s.color}`}>{s.value}</div>
+            <div className="text-[10px] text-muted-foreground font-mono-tech">{s.label}</div>
           </div>
-          <div className="font-mono-tech text-2xl text-foreground">{avgConfidence}%</div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="bg-card border border-border rounded-lg p-4 border-glow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-neon-red" />
-            <span className="text-xs text-muted-foreground font-mono-tech">RISING TREND</span>
-          </div>
-          <div className="font-mono-tech text-2xl text-neon-red">{risingCount}</div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-card border border-border rounded-lg p-4 border-glow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingDown className="w-4 h-4 text-neon-green" />
-            <span className="text-xs text-muted-foreground font-mono-tech">FALLING TREND</span>
-          </div>
-          <div className="font-mono-tech text-2xl text-neon-green">{fallingCount}</div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-card border border-border rounded-lg p-4 border-glow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-neon-orange" />
-            <span className="text-xs text-muted-foreground font-mono-tech">CRITICAL IN 60M</span>
-          </div>
-          <div className="font-mono-tech text-2xl text-neon-orange">{criticalCount}</div>
-        </motion.div>
+        ))}
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-6 text-[11px] font-mono-tech">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-neon-green flex-shrink-0" />
-          <span className="text-muted-foreground">Low (&lt;40%)</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-neon-orange flex-shrink-0" />
-          <span className="text-neon-orange">Medium (40-70%)</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-neon-red flex-shrink-0" />
-          <span className="text-neon-red">High (&gt;70%)</span>
-        </div>
-      </div>
+      {/* Prediction Cards */}
+      <div className="space-y-3">
+        {loading ? (
+          <div className="text-center py-12">
+            <RefreshCw className="w-6 h-6 mx-auto mb-3 animate-spin text-neon-purple" />
+            <p className="text-sm text-muted-foreground font-mono-tech">Loading predictions...</p>
+          </div>
+        ) : predictions.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground font-mono-tech text-sm">
+            No predictions available yet
+          </div>
+        ) : (
+          predictions.map((p, i) => {
+            const trend = getTrendLabel(p.trend);
+            const bars = [
+              { label: 'Now', value: p.current_congestion },
+              { label: '30m', value: p.predicted_30min },
+              { label: '1h', value: p.predicted_60min },
+              { label: '2h', value: p.predicted_120min },
+            ];
+            return (
+              <motion.div
+                key={p.zone_id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className="bg-card border border-border rounded-lg p-3.5 space-y-2.5 border-glow"
+              >
+                {/* Zone name + trend */}
+                <div className="flex items-center justify-between">
+                  <span className="font-display text-sm tracking-wide text-foreground">{p.zone_name}</span>
+                  <div className={`flex items-center gap-1 ${trend.color}`}>
+                    {trend.icon}
+                    <span className="text-xs font-mono-tech">{trend.label}</span>
+                  </div>
+                </div>
 
-      {/* Predictions Table */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="bg-card border border-border rounded-lg overflow-hidden border-glow"
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="text-left px-4 py-3 font-display text-xs tracking-wider text-muted-foreground">ZONE</th>
-                <th className="text-center px-4 py-3 font-display text-xs tracking-wider text-muted-foreground">CURRENT</th>
-                <th className="text-center px-4 py-3 font-display text-xs tracking-wider text-muted-foreground">+30M</th>
-                <th className="text-center px-4 py-3 font-display text-xs tracking-wider text-muted-foreground">+60M</th>
-                <th className="text-center px-4 py-3 font-display text-xs tracking-wider text-muted-foreground">+120M</th>
-                <th className="text-center px-4 py-3 font-display text-xs tracking-wider text-muted-foreground">TREND</th>
-                <th className="text-center px-4 py-3 font-display text-xs tracking-wider text-muted-foreground">CONFIDENCE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-muted-foreground font-mono-tech">
-                    <RefreshCw className="w-5 h-5 mx-auto mb-2 animate-spin" />
-                    Loading predictions...
-                  </td>
-                </tr>
-              ) : predictions.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-muted-foreground font-mono-tech">
-                    No predictions available
-                  </td>
-                </tr>
-              ) : (
-                predictions.map((p, i) => (
-                  <motion.tr
-                    key={p.zone_id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                    className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${getStatusDot(p.current_congestion)}`} />
-                        <span className="font-mono-tech text-foreground truncate max-w-[180px]">{p.zone_name}</span>
+                {/* Congestion bars */}
+                <div className="grid grid-cols-4 gap-2">
+                  {bars.map(b => (
+                    <div key={b.label} className="space-y-1">
+                      <div className="text-[10px] text-muted-foreground font-mono-tech text-center">{b.label}</div>
+                      <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                        <motion.div
+                          className={`h-full rounded-full ${getBarColor(b.value)}`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.round(b.value * 100)}%` }}
+                          transition={{ duration: 0.6, delay: 0.1 }}
+                        />
                       </div>
-                    </td>
-                    <td className={`text-center px-4 py-3 font-mono-tech ${getStatusColor(p.current_congestion)}`}>
-                      {Math.round(p.current_congestion * 100)}%
-                    </td>
-                    <td className={`text-center px-4 py-3 font-mono-tech ${getStatusColor(p.predicted_30min)}`}>
-                      {Math.round(p.predicted_30min * 100)}%
-                    </td>
-                    <td className={`text-center px-4 py-3 font-mono-tech ${getStatusColor(p.predicted_60min)}`}>
-                      {Math.round(p.predicted_60min * 100)}%
-                    </td>
-                    <td className={`text-center px-4 py-3 font-mono-tech ${getStatusColor(p.predicted_120min)}`}>
-                      {Math.round(p.predicted_120min * 100)}%
-                    </td>
-                    <td className="text-center px-4 py-3">
-                      <div className="flex items-center justify-center">
-                        {getTrendIcon(p.trend)}
+                      <div className={`text-[10px] font-mono-tech text-center ${b.value > 0.7 ? 'text-neon-red' : b.value > 0.4 ? 'text-neon-orange' : 'text-neon-green'}`}>
+                        {Math.round(b.value * 100)}%
                       </div>
-                    </td>
-                    <td className="text-center px-4 py-3">
-                      <span className={`font-mono-tech ${p.confidence > 80 ? 'text-neon-green' : p.confidence > 60 ? 'text-neon-cyan' : 'text-muted-foreground'}`}>
-                        {Math.round(p.confidence)}%
+                    </div>
+                  ))}
+                </div>
+
+                {/* Factors + confidence */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap gap-1.5 flex-1">
+                    {(p.factors || []).slice(0, 3).map(f => (
+                      <span key={f} className="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-secondary text-muted-foreground">
+                        {f.replace(/_/g, ' ')}
                       </span>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+                    ))}
+                  </div>
+                  <span className={`text-[10px] font-mono-tech flex-shrink-0 ${p.confidence > 80 ? 'text-neon-green' : 'text-muted-foreground'}`}>
+                    {Math.round(p.confidence)}% conf
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })
+        )}
+      </div>
 
       {/* Last updated */}
       {lastUpdated && (
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground font-mono-tech">
+        <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-mono-tech pb-2">
           <Clock className="w-3 h-3" />
-          Last updated: {lastUpdated.toLocaleTimeString()}
+          Updated: {lastUpdated.toLocaleTimeString()}
         </div>
       )}
     </div>

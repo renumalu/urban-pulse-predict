@@ -22,19 +22,19 @@ export default function DataStreamStatus() {
     try {
       const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleTimeString() : 'N/A';
 
-      const measure = async <T,>(fn: () => Promise<{ data: T[] | null; error: any }>): Promise<{ latency: number; count: number; data: T[] }> => {
+      const measure = async (fn: () => PromiseLike<{ data: any[] | null; error: any }>): Promise<{ latency: number; count: number; data: any[] }> => {
         const start = performance.now();
         const { data, error } = await fn();
         return { latency: Math.round(performance.now() - start), count: error ? 0 : (data?.length || 0), data: data || [] };
       };
 
       const [traffic, weather, accidents, alerts, emergency, zones] = await Promise.all([
-        measure(() => supabase.from('traffic_data').select('*').order('recorded_at', { ascending: false }).limit(1)),
-        measure(() => supabase.from('weather_data').select('*').order('recorded_at', { ascending: false }).limit(1)),
-        measure(() => supabase.from('accident_data').select('*').order('reported_at', { ascending: false }).limit(1)),
-        measure(() => supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(1)),
-        measure(() => supabase.from('emergency_units').select('*').order('updated_at', { ascending: false }).limit(1)),
-        measure(() => supabase.from('city_zones').select('*').order('created_at', { ascending: false }).limit(1)),
+        measure(() => supabase.from('traffic_data').select('*').order('recorded_at', { ascending: false }).limit(1) as any),
+        measure(() => supabase.from('weather_data').select('*').order('recorded_at', { ascending: false }).limit(1) as any),
+        measure(() => supabase.from('accident_data').select('*').order('reported_at', { ascending: false }).limit(1) as any),
+        measure(() => supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(1) as any),
+        measure(() => supabase.from('emergency_units').select('*').order('updated_at', { ascending: false }).limit(1) as any),
+        measure(() => supabase.from('city_zones').select('*').order('created_at', { ascending: false }).limit(1) as any),
       ]);
 
       if (!mountedRef.current) return;

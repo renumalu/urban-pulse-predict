@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Activity, Clock, Zap } from 'lucide-react';
+import { Activity, Clock, Zap, Download, FileSpreadsheet } from 'lucide-react';
 import type { TrafficData, FloodData, AccidentData } from '@/lib/simulation';
+import { exportTrafficCSV, exportFloodCSV, exportAccidentsCSV, exportFullReport } from '@/lib/csv-export';
 
 interface AnalyticsPanelProps {
   traffic: TrafficData[];

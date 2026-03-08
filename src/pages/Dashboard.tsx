@@ -99,6 +99,9 @@ export default function Dashboard() {
             <FloodPanel flood={flood} history={floodHistory} />
           </motion.div>
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+            <SolutionsPanel traffic={traffic} flood={flood} emergencyUnits={emergencyUnits} />
+          </motion.div>
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
             <DataStreamStatus />
           </motion.div>
         </div>

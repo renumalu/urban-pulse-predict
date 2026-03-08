@@ -268,6 +268,45 @@ export type Database = {
         }
         Relationships: []
       }
+      traffic_predictions: {
+        Row: {
+          confidence: number
+          created_at: string
+          current_congestion: number
+          factors: string[] | null
+          id: string
+          predicted_120min: number
+          predicted_30min: number
+          predicted_60min: number
+          trend: string
+          zone_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          current_congestion?: number
+          factors?: string[] | null
+          id?: string
+          predicted_120min?: number
+          predicted_30min?: number
+          predicted_60min?: number
+          trend?: string
+          zone_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          current_congestion?: number
+          factors?: string[] | null
+          id?: string
+          predicted_120min?: number
+          predicted_30min?: number
+          predicted_60min?: number
+          trend?: string
+          zone_id?: string
+        }
+        Relationships: []
+      }
       weather_data: {
         Row: {
           humidity: number | null

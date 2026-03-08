@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, Trash2, Zap } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
@@ -11,10 +13,48 @@ const SUGGESTIONS = [
   "Show me Delhi traffic",
   "Which zones have flood risk?",
   "Top 5 most congested states",
-  "Weather in Kerala right now",
-  "Any active emergency alerts?",
-  "Compare Mumbai vs Bangalore traffic",
+  "Dispatch ambulance to Maharashtra",
+  "Create flood alert for Kerala",
+  "Trigger emergency in Delhi",
 ];
+
+// Parse action blocks from AI response
+function extractActions(content: string): { type: string; zone_id?: string; severity?: string; message?: string; unit_type?: string }[] {
+  const actions: any[] = [];
+  const regex = /```action\n([\s\S]*?)```/g;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    try {
+      actions.push(JSON.parse(match[1].trim()));
+    } catch { /* skip invalid */ }
+  }
+  return actions;
+}
+
+// Execute parsed actions
+async function executeActions(actions: any[]) {
+  for (const action of actions) {
+    try {
+      const resp = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ action }),
+      });
+      const result = await resp.json();
+      if (result.success) {
+        toast.success(`✅ Action executed: ${result.message}`);
+      } else {
+        toast.error(`Action failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Action execution failed:', err);
+      toast.error('Failed to execute action');
+    }
+  }
+}
 
 export default function AIChatWidget() {
   const [open, setOpen] = useState(false);
@@ -130,12 +170,21 @@ export default function AIChatWidget() {
           } catch { /* ignore */ }
         }
       }
+
+      // Extract and execute any action commands
+      const actions = extractActions(assistantSoFar);
+      if (actions.length > 0) {
+        await executeActions(actions);
+      }
     } catch (err: any) {
       setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${err.message || 'Something went wrong. Please try again.'}` }]);
     } finally {
       setIsLoading(false);
     }
   }, [messages, isLoading]);
+
+  // Clean action blocks from displayed content
+  const cleanContent = (content: string) => content.replace(/```action\n[\s\S]*?```/g, '').trim();
 
   return (
     <>
@@ -173,7 +222,10 @@ export default function AIChatWidget() {
                 </div>
                 <div>
                   <h3 className="font-display text-xs tracking-widest text-primary">URBANPULSE AI</h3>
-                  <p className="text-[10px] text-muted-foreground font-mono-tech">Live data • 36 zones</p>
+                  <p className="text-[10px] text-muted-foreground font-mono-tech flex items-center gap-1">
+                    <Zap className="w-2.5 h-2.5 text-neon-green" />
+                    Actions enabled • 36 zones
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -202,7 +254,7 @@ export default function AIChatWidget() {
                   <div className="text-center py-6">
                     <Sparkles className="w-8 h-8 text-primary mx-auto mb-3 opacity-60" />
                     <h4 className="font-display text-sm tracking-wider text-foreground mb-1">Ask me anything</h4>
-                    <p className="text-xs text-muted-foreground font-mono-tech">I have access to live traffic, weather, flood, and emergency data</p>
+                    <p className="text-xs text-muted-foreground font-mono-tech">I can analyze data AND trigger emergency actions</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {SUGGESTIONS.map(s => (
@@ -239,7 +291,7 @@ export default function AIChatWidget() {
                   >
                     {msg.role === 'assistant' ? (
                       <div className="prose prose-sm prose-invert max-w-none [&_table]:text-xs [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1 [&_table]:border-border [&_th]:border-border [&_td]:border-border [&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-xs [&_p]:text-sm [&_li]:text-sm [&_strong]:text-primary [&_h1]:text-primary [&_h2]:text-primary [&_h3]:text-primary [&_code]:text-neon-cyan [&_code]:bg-background/50 [&_code]:px-1 [&_code]:rounded">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        <ReactMarkdown>{cleanContent(msg.content)}</ReactMarkdown>
                       </div>
                     ) : (
                       msg.content
@@ -278,7 +330,7 @@ export default function AIChatWidget() {
                   type="text"
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  placeholder="Ask about any zone..."
+                  placeholder="Ask or command..."
                   disabled={isLoading}
                   className="flex-1 bg-secondary text-foreground text-sm font-mono-tech rounded-lg px-3.5 py-2.5 border border-border focus:border-primary outline-none placeholder:text-muted-foreground disabled:opacity-50"
                   maxLength={500}

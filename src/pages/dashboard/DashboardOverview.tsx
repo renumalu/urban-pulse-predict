@@ -4,6 +4,7 @@ import CityMapView from '@/components/CityMapView';
 import SolutionsPanel from '@/components/SolutionsPanel';
 import AlertsPanel from '@/components/AlertsPanel';
 import DataStreamStatus from '@/components/DataStreamStatus';
+import SmartCityControlCenter from '@/components/SmartCityControlCenter';
 import type { TrafficData, FloodData, AccidentData, EmergencyUnit, Alert } from '@/lib/simulation';
 
 interface DashboardOverviewProps {
@@ -24,6 +25,9 @@ export default function DashboardOverview({
       {/* Left panel - Solutions & Status */}
       <div className="lg:col-span-1 space-y-4 order-2 lg:order-1">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+          <SmartCityControlCenter />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
           <SolutionsPanel traffic={traffic} flood={flood} emergencyUnits={emergencyUnits} />
         </motion.div>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>

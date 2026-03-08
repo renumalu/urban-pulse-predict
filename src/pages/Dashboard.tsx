@@ -121,6 +121,7 @@ export default function Dashboard() {
                   accidents={accidents}
                 />
               } />
+              <Route path="predictions" element={<AIPredictionsView />} />
             </Routes>
           </main>
         </div>

@@ -1,4 +1,4 @@
-import { Car, CloudRain, Ambulance, BarChart3, Map, Box, Radio, LogOut, Activity, FileText } from 'lucide-react';
+import { Car, CloudRain, Ambulance, BarChart3, Map, Box, Radio, LogOut, Activity, FileText, Brain, Sparkles } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -20,8 +20,9 @@ const navItems = [
   { title: 'Traffic Intelligence', url: '/dashboard/traffic', icon: Car, color: 'text-neon-orange' },
   { title: 'Flood & Weather', url: '/dashboard/flood', icon: CloudRain, color: 'text-neon-cyan' },
   { title: 'Emergency Control', url: '/dashboard/emergency', icon: Ambulance, color: 'text-neon-red' },
-  { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3, color: 'text-neon-purple' },
-  { title: 'Citizen Reports', url: '/reports', icon: FileText, color: 'text-neon-green' },
+  { title: 'AI Predictions', url: '/dashboard/predictions', icon: Brain, color: 'text-neon-purple' },
+  { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3, color: 'text-neon-green' },
+  { title: 'Citizen Reports', url: '/reports', icon: FileText, color: 'text-muted-foreground' },
 ];
 
 export function DashboardSidebar() {

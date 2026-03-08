@@ -46,7 +46,11 @@ export default function CityMapView({ traffic, flood, accidents, emergencyUnits,
         zoom={5}
         className="h-full w-full"
         style={{ background: '#0a1520' }}
-        zoomControl={false}
+        zoomControl={true}
+        scrollWheelZoom={true}
+        dragging={true}
+        doubleClickZoom={true}
+        touchZoom={true}
       >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

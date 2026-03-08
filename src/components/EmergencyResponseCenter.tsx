@@ -353,7 +353,7 @@ export default function EmergencyResponseCenter() {
 
             {/* HISTORY TAB */}
             {activeTab === 'history' && (
-              <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-2">
+              <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
                 <div className="text-xs font-mono-tech text-muted-foreground mb-2">
                   Recent emergency alerts and dispatch history
                 </div>

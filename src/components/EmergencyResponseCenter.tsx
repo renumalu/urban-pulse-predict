@@ -185,10 +185,9 @@ export default function EmergencyResponseCenter() {
         </div>
 
         <div className="p-4">
-          <AnimatePresence mode="wait">
-            {/* DISPATCH TAB */}
-            {activeTab === 'dispatch' && (
-              <motion.div key="dispatch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+          {/* DISPATCH TAB */}
+          {activeTab === 'dispatch' && (
+            <motion.div key="dispatch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                 <div className="text-xs font-mono-tech text-muted-foreground mb-2">
                   Dispatch emergency services to any zone. Alerts are logged and nearest available unit is auto-assigned.
                 </div>

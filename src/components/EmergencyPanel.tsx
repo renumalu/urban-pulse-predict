@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import type { EmergencyUnit } from '@/lib/simulation';
+import { INDIAN_ZONES, ZONE_POSITIONS } from '@/lib/india-zones';
 import { Siren, Flame, Shield, Ambulance, Navigation, Loader2 } from 'lucide-react';
 
 interface EmergencyPanelProps {
@@ -21,25 +22,14 @@ const statusColors = {
   'en-route': 'text-neon-red',
 };
 
-const ZONE_POSITIONS: Record<string, [number, number]> = {
-  z0: [40.7128, -74.0060], z1: [40.7075, -74.0021], z2: [40.7189, -74.0120],
-  z3: [40.7282, -73.9942], z4: [40.7148, -73.9980], z5: [40.7020, -74.0150],
-  z6: [40.7295, -73.9965], z7: [40.7050, -74.0080], z8: [40.7350, -73.9900],
-  z9: [40.6980, -74.0040], z10: [40.7200, -74.0000], z11: [40.7320, -74.0100],
-};
-
-const ZONE_NAMES = Object.entries({
-  z0: 'Downtown Core', z1: 'Financial District', z2: 'Riverside', z3: 'Tech Park',
-  z4: 'Old Town', z5: 'Harbor District', z6: 'University Quarter', z7: 'Industrial Zone',
-  z8: 'Residential North', z9: 'Residential South', z10: 'Commercial Strip', z11: 'Green Belt',
-});
+const ZONE_OPTIONS = INDIAN_ZONES.map(z => [z.id, z.name] as const);
 
 export default function EmergencyPanel({ units, onRouteCalculated }: EmergencyPanelProps) {
   const available = units.filter(u => u.status === 'available').length;
   const dispatched = units.filter(u => u.status !== 'available').length;
 
-  const [fromZone, setFromZone] = useState('z0');
-  const [toZone, setToZone] = useState('z3');
+  const [fromZone, setFromZone] = useState('z31'); // Delhi
+  const [toZone, setToZone] = useState('z25'); // UP
   const [routing, setRouting] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{ distance: number; time: number; waypoints: number } | null>(null);
 
@@ -94,7 +84,7 @@ export default function EmergencyPanel({ units, onRouteCalculated }: EmergencyPa
               onChange={e => setFromZone(e.target.value)}
               className="w-full bg-secondary text-foreground text-xs font-mono-tech rounded-md px-2 py-1.5 border border-border focus:border-primary outline-none"
             >
-              {ZONE_NAMES.map(([id, name]) => (
+              {ZONE_OPTIONS.map(([id, name]) => (
                 <option key={id} value={id}>{name}</option>
               ))}
             </select>
@@ -106,7 +96,7 @@ export default function EmergencyPanel({ units, onRouteCalculated }: EmergencyPa
               onChange={e => setToZone(e.target.value)}
               className="w-full bg-secondary text-foreground text-xs font-mono-tech rounded-md px-2 py-1.5 border border-border focus:border-primary outline-none"
             >
-              {ZONE_NAMES.map(([id, name]) => (
+              {ZONE_OPTIONS.map(([id, name]) => (
                 <option key={id} value={id}>{name}</option>
               ))}
             </select>
@@ -154,7 +144,7 @@ export default function EmergencyPanel({ units, onRouteCalculated }: EmergencyPa
               className="flex items-center gap-3 bg-secondary rounded-md p-2"
             >
               <Icon className={`w-4 h-4 ${statusColors[u.status]}`} />
-              <span className="font-mono-tech text-sm text-foreground capitalize flex-1">{u.type} {u.id.slice(-1)}</span>
+              <span className="font-mono-tech text-sm text-foreground capitalize flex-1">{u.type} {u.id.slice(-2)}</span>
               <span className={`text-xs font-mono-tech capitalize ${statusColors[u.status]}`}>{u.status}</span>
             </motion.div>
           );

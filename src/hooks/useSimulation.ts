@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { updateSimulation, generateTimeSeriesData, type TrafficData, type FloodData, type AccidentData, type EmergencyUnit, type Alert } from '@/lib/simulation';
+import { getZoneName, getElevation } from '@/lib/india-zones';
 
 export function useSimulation(interval = 3000) {
   const [traffic, setTraffic] = useState<TrafficData[]>([]);
@@ -14,14 +15,12 @@ export function useSimulation(interval = 3000) {
 
   const fetchFromBackend = useCallback(async () => {
     try {
-      // Trigger simulation
       await supabase.functions.invoke('simulate-data');
 
-      // Fetch latest data
       const [trafficRes, weatherRes, accidentsRes, unitsRes, alertsRes] = await Promise.all([
-        supabase.from('traffic_data').select('*').order('recorded_at', { ascending: false }).limit(12),
-        supabase.from('weather_data').select('*').order('recorded_at', { ascending: false }).limit(12),
-        supabase.from('accident_data').select('*').order('reported_at', { ascending: false }).limit(20),
+        supabase.from('traffic_data').select('*').order('recorded_at', { ascending: false }).limit(36),
+        supabase.from('weather_data').select('*').order('recorded_at', { ascending: false }).limit(36),
+        supabase.from('accident_data').select('*').order('reported_at', { ascending: false }).limit(30),
         supabase.from('emergency_units').select('*'),
         supabase.from('alerts').select('*').eq('is_active', true).order('created_at', { ascending: false }),
       ]);
@@ -40,7 +39,8 @@ export function useSimulation(interval = 3000) {
       if (weatherRes.data) {
         setFlood(weatherRes.data.map(w => {
           const elevation = getElevation(w.zone_id);
-          const risk = Math.max(0, Math.min(1, (w.rainfall / 80) * (1 - elevation / 35)));
+          const maxElev = 3500;
+          const risk = Math.max(0, Math.min(1, (w.rainfall / 80) * (1 - elevation / maxElev)));
           return {
             zoneId: w.zone_id,
             zoneName: getZoneName(w.zone_id),
@@ -111,16 +111,3 @@ export function useSimulation(interval = 3000) {
 
   return { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory, useBackend };
 }
-
-const ZONE_NAMES: Record<string, string> = {
-  z0: 'Downtown Core', z1: 'Financial District', z2: 'Riverside', z3: 'Tech Park',
-  z4: 'Old Town', z5: 'Harbor District', z6: 'University Quarter', z7: 'Industrial Zone',
-  z8: 'Residential North', z9: 'Residential South', z10: 'Commercial Strip', z11: 'Green Belt',
-};
-
-const ZONE_ELEVATIONS: Record<string, number> = {
-  z0: 10, z1: 15, z2: 3, z3: 20, z4: 12, z5: 2, z6: 18, z7: 8, z8: 25, z9: 22, z10: 14, z11: 30,
-};
-
-function getZoneName(zoneId: string) { return ZONE_NAMES[zoneId] || zoneId; }
-function getElevation(zoneId: string) { return ZONE_ELEVATIONS[zoneId] || 10; }

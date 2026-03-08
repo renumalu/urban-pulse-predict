@@ -121,7 +121,7 @@ export default function Dashboard() {
               } />
               <Route path="predictions" element={<AIPredictionsView />} />
               <Route path="control" element={<ControlCenterView />} />
-              <Route path="alerts" element={<LiveAlertsView alerts={alerts} />} />
+              <Route path="alerts" element={<LiveAlertsView />} />
               <Route path="crisis" element={
                 <CrisisSolutionView traffic={traffic} flood={flood} emergencyUnits={emergencyUnits} />
               } />

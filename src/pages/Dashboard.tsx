@@ -12,6 +12,7 @@ import TrafficPredictionPanel from '@/components/TrafficPredictionPanel';
 import PredictionTimeline from '@/components/PredictionTimeline';
 import ImpactMetricsPanel from '@/components/ImpactMetricsPanel';
 import DataStreamStatus from '@/components/DataStreamStatus';
+import SolutionsPanel from '@/components/SolutionsPanel';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Activity, Radio, Map, Box, Database, Wifi, MessageSquarePlus, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';

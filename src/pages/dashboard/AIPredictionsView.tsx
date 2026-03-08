@@ -148,14 +148,23 @@ export default function AIPredictionsView() {
             </p>
           </div>
         </div>
-        <button
-          onClick={fetchPredictions}
-          disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span className="text-xs font-mono-tech">Refresh</span>
-        </button>
+        <div className="flex items-center gap-4">
+          {/* Live indicator */}
+          <div className="flex items-center gap-2">
+            <Radio className={`w-3.5 h-3.5 ${isLive ? 'text-neon-green animate-pulse' : 'text-muted-foreground'}`} />
+            <span className={`text-xs font-mono-tech ${isLive ? 'text-neon-green' : 'text-muted-foreground'}`}>
+              {isLive ? 'LIVE' : 'CONNECTING...'}
+            </span>
+          </div>
+          <button
+            onClick={fetchPredictions}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="text-xs font-mono-tech">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}

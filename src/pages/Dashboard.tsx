@@ -9,6 +9,10 @@ import FloodView from '@/pages/dashboard/FloodView';
 import EmergencyView from '@/pages/dashboard/EmergencyView';
 import AnalyticsView from '@/pages/dashboard/AnalyticsView';
 import AIPredictionsView from '@/pages/dashboard/AIPredictionsView';
+import ControlCenterView from '@/pages/dashboard/ControlCenterView';
+import LiveAlertsView from '@/pages/dashboard/LiveAlertsView';
+import CrisisSolutionView from '@/pages/dashboard/CrisisSolutionView';
+import DataStreamsView from '@/pages/dashboard/DataStreamsView';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Box, Map, Database, Wifi } from 'lucide-react';
 
@@ -38,7 +42,6 @@ export default function Dashboard() {
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Backend indicator */}
               <div className="flex items-center gap-1">
                 {useBackend ? (
                   <Database className="w-3 h-3 text-neon-cyan" />
@@ -50,7 +53,6 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              {/* View toggle */}
               <div className="flex items-center gap-1 bg-secondary rounded-md p-1">
                 <button
                   onClick={() => setViewMode('map')}
@@ -115,13 +117,15 @@ export default function Dashboard() {
                 />
               } />
               <Route path="analytics" element={
-                <AnalyticsView
-                  traffic={traffic}
-                  flood={flood}
-                  accidents={accidents}
-                />
+                <AnalyticsView traffic={traffic} flood={flood} accidents={accidents} />
               } />
               <Route path="predictions" element={<AIPredictionsView />} />
+              <Route path="control" element={<ControlCenterView />} />
+              <Route path="alerts" element={<LiveAlertsView alerts={alerts} />} />
+              <Route path="crisis" element={
+                <CrisisSolutionView traffic={traffic} flood={flood} emergencyUnits={emergencyUnits} />
+              } />
+              <Route path="streams" element={<DataStreamsView />} />
             </Routes>
           </main>
         </div>

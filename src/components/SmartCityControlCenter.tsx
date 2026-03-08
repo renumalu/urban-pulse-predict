@@ -170,15 +170,19 @@ export default function SmartCityControlCenter({ onRouteSelected }: SmartCityCon
         <div className="flex items-center gap-2">
           <button
             onClick={enableNotifications}
-            className={`p-1.5 rounded-md transition-colors ${notificationsEnabled ? 'text-neon-green' : 'text-muted-foreground hover:text-foreground'}`}
-            title={notificationsEnabled ? 'Notifications enabled' : 'Enable notifications'}
+            className={`p-1.5 rounded-md transition-colors ${notificationsEnabled ? 'text-neon-green bg-neon-green/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}
+            title={notificationsEnabled ? 'Click to disable notifications' : 'Click to enable notifications'}
           >
             {notificationsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
           <button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`p-1.5 rounded-md transition-colors ${autoRefresh ? 'text-neon-green' : 'text-muted-foreground hover:text-foreground'}`}
-            title={autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
+            onClick={() => {
+              const next = !autoRefresh;
+              setAutoRefresh(next);
+              toast.info(next ? '⚡ Auto-refresh ON — data updates every 30s' : '⏸️ Auto-refresh paused');
+            }}
+            className={`p-1.5 rounded-md transition-colors ${autoRefresh ? 'text-neon-green bg-neon-green/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary'}`}
+            title={autoRefresh ? 'Auto-refresh ON (click to pause)' : 'Auto-refresh OFF (click to resume)'}
           >
             <Zap className={`w-4 h-4 ${autoRefresh ? 'animate-pulse' : ''}`} />
           </button>

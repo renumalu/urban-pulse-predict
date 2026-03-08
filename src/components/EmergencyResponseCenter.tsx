@@ -258,7 +258,7 @@ export default function EmergencyResponseCenter() {
 
             {/* CALLS TAB */}
             {activeTab === 'calls' && (
-              <motion.div key="calls" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+              <motion.div key="calls" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                 {calls.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Phone className="w-8 h-8 mx-auto mb-2 opacity-50" />

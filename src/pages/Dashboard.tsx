@@ -10,6 +10,8 @@ import AlertsPanel from '@/components/AlertsPanel';
 import AnalyticsPanel from '@/components/AnalyticsPanel';
 import TrafficPredictionPanel from '@/components/TrafficPredictionPanel';
 import PredictionTimeline from '@/components/PredictionTimeline';
+import ImpactMetricsPanel from '@/components/ImpactMetricsPanel';
+import DataStreamStatus from '@/components/DataStreamStatus';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Activity, Radio, Map, Box, Database, Wifi, MessageSquarePlus, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -95,6 +97,9 @@ export default function Dashboard() {
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
             <FloodPanel flood={flood} history={floodHistory} />
           </motion.div>
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+            <DataStreamStatus />
+          </motion.div>
         </div>
 
         {/* Center - Map or 3D View */}
@@ -116,13 +121,16 @@ export default function Dashboard() {
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
             <AlertsPanel alerts={alerts} />
           </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
             <EmergencyPanel units={emergencyUnits} onRouteCalculated={handleRouteCalculated} />
           </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+            <ImpactMetricsPanel traffic={traffic} flood={flood} accidents={accidents} />
+          </motion.div>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
             <AnalyticsPanel traffic={traffic} flood={flood} accidents={accidents} />
           </motion.div>
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
             <PredictionTimeline />
           </motion.div>
         </div>

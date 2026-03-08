@@ -106,13 +106,22 @@ export default function SmartCityControlCenter({ onRouteSelected }: SmartCityCon
   }, [autoRefresh, fetchAlerts, fetchAnomalies, fetchSignalOptimizations]);
 
   const enableNotifications = async () => {
-    const granted = await requestNotificationPermission();
-    setNotificationsEnabled(granted);
-    if (granted) {
-      toast.success('Push notifications enabled');
-      sendBrowserNotification('UrbanPulse', 'You will now receive critical alerts');
-    } else {
-      toast.error('Notification permission denied');
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false);
+      toast.info('🔇 Push notifications disabled');
+      return;
+    }
+    try {
+      const granted = await requestNotificationPermission();
+      setNotificationsEnabled(granted);
+      if (granted) {
+        toast.success('🔔 Push notifications enabled — you will receive critical alerts');
+        sendBrowserNotification('UrbanPulse', 'You will now receive critical alerts');
+      } else {
+        toast.error('Notification permission denied by browser. Check your browser settings.');
+      }
+    } catch {
+      toast.error('Notifications not supported in this browser context');
     }
   };
 

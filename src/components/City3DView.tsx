@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState, useCallback } from 'react';
-import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { TrafficData, FloodData, AccidentData } from '@/lib/simulation';
@@ -32,7 +32,7 @@ interface ZoneTooltipData {
 }
 
 function Building({ position, height, congestion, onClick }: { 
-  position: [number, number, number]; height: number; congestion: number; onClick?: (e: ThreeEvent<MouseEvent>) => void;
+  position: [number, number, number]; height: number; congestion: number; onClick?: (e: any) => void;
 }) {
   const ref = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -83,7 +83,7 @@ function ZoneGroup({ zone, traffic, flood, accidents, onZoneClick }: {
   const zoneAccidents = accidents.filter(a => a.zone === zone.name);
   const cong = t?.congestionLevel ?? 0.2;
 
-  const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+  const handleClick = useCallback((e: any) => {
     e.stopPropagation();
     onZoneClick({
       name: zone.name,

@@ -122,12 +122,12 @@ export default function AnalyticsView({ traffic, flood, accidents }: AnalyticsVi
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <div className="bg-card border border-border rounded-lg p-4 border-glow">
             <h4 className="text-xs text-muted-foreground font-display tracking-wider mb-3">SLOWEST ZONES (AVG SPEED)</h4>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin pr-1">
               {[...traffic].sort((a, b) => a.avgSpeed - b.avgSpeed).slice(0, 10).map((t, i) => (
                 <div key={t.zoneId} className="flex items-center gap-2 text-xs">
-                  <span className="font-mono-tech text-muted-foreground w-4">{i + 1}</span>
+                  <span className="font-mono-tech text-muted-foreground w-4 flex-shrink-0">{i + 1}</span>
                   <span className="font-mono-tech text-foreground flex-1 truncate">{t.zoneName}</span>
-                  <span className="font-mono-tech text-neon-red">{t.avgSpeed} km/h</span>
+                  <span className="font-mono-tech text-neon-red flex-shrink-0">{t.avgSpeed} km/h</span>
                 </div>
               ))}
             </div>

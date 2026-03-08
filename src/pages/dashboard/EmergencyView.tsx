@@ -99,15 +99,23 @@ export default function EmergencyView({
         {/* Active Accidents */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
           <div className="bg-card border border-border rounded-lg p-4 border-glow">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-4 h-4 text-neon-orange" />
-              <h4 className="text-xs text-muted-foreground font-display tracking-wider">ACTIVE INCIDENTS</h4>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-neon-orange" />
+                <h4 className="text-xs text-muted-foreground font-display tracking-wider">ACTIVE INCIDENTS</h4>
+              </div>
+              {/* Legend */}
+              <div className="flex items-center gap-2 text-[9px] font-mono-tech">
+                <span className="px-1 py-0.5 rounded bg-neon-green/20 text-neon-green">low</span>
+                <span className="px-1 py-0.5 rounded bg-neon-orange/20 text-neon-orange">med</span>
+                <span className="px-1 py-0.5 rounded bg-neon-red/20 text-neon-red">high</span>
+              </div>
             </div>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
+            <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin pr-1">
               {accidents.slice(0, 8).map(a => (
                 <div key={a.id} className="flex items-center justify-between text-xs">
-                  <span className="font-mono-tech text-foreground truncate w-28">{a.zone}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono-tech ${
+                  <span className="font-mono-tech text-foreground truncate flex-1 mr-2">{a.zone}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono-tech flex-shrink-0 ${
                     a.severity === 'high' ? 'bg-neon-red/20 text-neon-red' :
                     a.severity === 'medium' ? 'bg-neon-orange/20 text-neon-orange' :
                     'bg-neon-green/20 text-neon-green'

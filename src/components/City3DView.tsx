@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState, useCallback } from 'react';
-import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { TrafficData, FloodData, AccidentData } from '@/lib/simulation';

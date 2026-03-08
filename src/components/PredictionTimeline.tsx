@@ -179,6 +179,26 @@ export default function PredictionTimeline() {
     { id: 'zones', label: 'By Zone', icon: BarChart3 },
   ];
 
+  // When no prediction data, show a compact summary from latest predictions
+  const latestPredictions = useMemo(() => {
+    if (predictions.length === 0) return [];
+    // Get latest batch
+    const latest = predictionBatches[predictionBatches.length - 1];
+    if (!latest) return [];
+    return latest.predictions.map(p => {
+      const zone = INDIAN_ZONES.find(z => z.id === p.zone_id);
+      return {
+        zone: zone?.name || p.zone_id,
+        current: Math.round(p.current_congestion * 100),
+        in30: Math.round(p.predicted_30min * 100),
+        in60: Math.round(p.predicted_60min * 100),
+        in120: Math.round(p.predicted_120min * 100),
+        confidence: Math.round(p.confidence * 100),
+        trend: p.trend,
+      };
+    }).sort((a, b) => b.current - a.current);
+  }, [predictions, predictionBatches]);
+
   if (loading) {
     return (
       <div className="bg-card border border-border rounded-lg p-6 flex items-center justify-center">
@@ -188,7 +208,7 @@ export default function PredictionTimeline() {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-4 border-glow">
+    <div className="bg-card border border-border rounded-lg p-4 space-y-3 border-glow">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -205,7 +225,7 @@ export default function PredictionTimeline() {
             <ChevronDown className="w-3 h-3" />
           </button>
           {zoneOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-y-auto w-48">
+            <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-md shadow-lg max-h-48 overflow-y-auto scrollbar-thin w-48">
               <button onClick={() => { setSelectedZone('all'); setZoneOpen(false); }} className="w-full text-left px-3 py-1.5 text-xs font-mono-tech hover:bg-secondary text-foreground">All Zones</button>
               {INDIAN_ZONES.map(z => (
                 <button key={z.id} onClick={() => { setSelectedZone(z.id); setZoneOpen(false); }} className="w-full text-left px-3 py-1.5 text-xs font-mono-tech hover:bg-secondary text-muted-foreground truncate">
@@ -220,30 +240,32 @@ export default function PredictionTimeline() {
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-secondary rounded-md p-2 text-center">
-          <div className="font-mono-tech text-lg text-neon-green">{overallAccuracy ?? '—'}%</div>
-          <div className="text-[10px] text-muted-foreground">Avg Accuracy</div>
-        </div>
-        <div className="bg-secondary rounded-md p-2 text-center">
-          <div className={`font-mono-tech text-lg ${accuracyTrend > 0 ? 'text-neon-green' : accuracyTrend < 0 ? 'text-neon-red' : 'text-muted-foreground'}`}>
-            {accuracyTrend > 0 ? '+' : ''}{accuracyTrend}%
+          <div className="font-mono-tech text-base text-neon-green">
+            {overallAccuracy !== null ? `${overallAccuracy}%` : `${latestPredictions.length > 0 ? Math.round(latestPredictions.reduce((s, p) => s + p.confidence, 0) / latestPredictions.length) : '—'}%`}
           </div>
-          <div className="text-[10px] text-muted-foreground">Improvement</div>
+          <div className="text-[10px] text-muted-foreground">{overallAccuracy !== null ? 'Accuracy' : 'Confidence'}</div>
         </div>
         <div className="bg-secondary rounded-md p-2 text-center">
-          <div className="font-mono-tech text-lg text-neon-purple">{predictionBatches.length}</div>
-          <div className="text-[10px] text-muted-foreground">Batches</div>
+          <div className={`font-mono-tech text-base ${accuracyTrend > 0 ? 'text-neon-green' : accuracyTrend < 0 ? 'text-neon-red' : 'text-muted-foreground'}`}>
+            {accuracyTrend !== 0 ? `${accuracyTrend > 0 ? '+' : ''}${accuracyTrend}%` : `${latestPredictions.filter(p => p.trend === 'increasing').length}↑`}
+          </div>
+          <div className="text-[10px] text-muted-foreground">{accuracyTrend !== 0 ? 'Trend' : 'Rising'}</div>
+        </div>
+        <div className="bg-secondary rounded-md p-2 text-center">
+          <div className="font-mono-tech text-base text-neon-purple">{predictionBatches.length || predictions.length}</div>
+          <div className="text-[10px] text-muted-foreground">Predictions</div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-secondary rounded-md p-1">
+      <div className="flex gap-1 bg-secondary rounded-md p-0.5">
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs font-mono-tech transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-[11px] font-mono-tech transition-colors ${
                 activeTab === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -256,105 +278,156 @@ export default function PredictionTimeline() {
       {/* Tab content */}
       <motion.div key={activeTab} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
         {activeTab === 'accuracy' && (
-          <div className="space-y-3">
+          <div>
             {accuracyOverTime.length > 0 ? (
-              <div className="h-52">
+              <div className="h-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={accuracyOverTime} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 25% 16%)" />
-                    <XAxis dataKey="time" tick={{ fontSize: 9, fill: 'hsl(200 20% 55%)' }} interval="preserveStartEnd" />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'hsl(200 20% 55%)' }} />
+                    <XAxis dataKey="time" tick={{ fontSize: 8, fill: 'hsl(200 20% 55%)' }} interval="preserveStartEnd" />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(200 20% 55%)' }} />
                     <Tooltip
-                      contentStyle={{ background: 'hsl(220 25% 9%)', border: '1px solid hsl(200 60% 20%)', borderRadius: 8, fontSize: 11 }}
+                      contentStyle={{ background: 'hsl(220 25% 9%)', border: '1px solid hsl(200 60% 20%)', borderRadius: 8, fontSize: 10 }}
                       labelStyle={{ color: 'hsl(200 100% 95%)', fontFamily: 'Share Tech Mono' }}
                       itemStyle={{ fontFamily: 'Share Tech Mono' }}
                     />
-                    <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'Share Tech Mono' }} />
-                    <Line type="monotone" dataKey="accuracy" name="Accuracy %" stroke="hsl(145 100% 50%)" strokeWidth={2} dot={{ r: 3 }} />
+                    <Legend wrapperStyle={{ fontSize: 9, fontFamily: 'Share Tech Mono' }} />
+                    <Line type="monotone" dataKey="accuracy" name="Accuracy %" stroke="hsl(145 100% 50%)" strokeWidth={2} dot={{ r: 2 }} />
                     <Line type="monotone" dataKey="confidence" name="Confidence %" stroke="hsl(270 100% 60%)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground text-center py-6 font-mono-tech">
-                Generate more predictions to see accuracy trends
-              </p>
+              /* Show latest predictions as a table when no accuracy data yet */
+              <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin">
+                {latestPredictions.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-5 gap-1 text-[9px] font-mono-tech text-muted-foreground px-1 pb-1 border-b border-border">
+                      <span className="col-span-2">Zone</span>
+                      <span className="text-center">Now</span>
+                      <span className="text-center">+60m</span>
+                      <span className="text-center">Conf</span>
+                    </div>
+                    {latestPredictions.slice(0, 10).map((p, i) => (
+                      <div key={i} className="grid grid-cols-5 gap-1 text-[10px] font-mono-tech px-1 py-0.5 rounded hover:bg-secondary/50">
+                        <span className="col-span-2 text-foreground truncate">{p.zone}</span>
+                        <span className="text-center" style={{ color: `hsl(${120 - p.current * 1.2}, 80%, 55%)` }}>{p.current}%</span>
+                        <span className="text-center" style={{ color: `hsl(${120 - p.in60 * 1.2}, 80%, 55%)` }}>{p.in60}%</span>
+                        <span className="text-center text-neon-purple">{p.confidence}%</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4 font-mono-tech">
+                    Run predictions to see data
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
 
         {activeTab === 'timeline' && (
-          <div className="space-y-3">
+          <div>
             {accuracyOverTime.length > 0 ? (
-              <div className="h-52">
+              <div className="h-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={accuracyOverTime} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 25% 16%)" />
-                    <XAxis dataKey="time" tick={{ fontSize: 9, fill: 'hsl(200 20% 55%)' }} interval="preserveStartEnd" />
-                    <YAxis tick={{ fontSize: 9, fill: 'hsl(200 20% 55%)' }} />
+                    <XAxis dataKey="time" tick={{ fontSize: 8, fill: 'hsl(200 20% 55%)' }} interval="preserveStartEnd" />
+                    <YAxis tick={{ fontSize: 8, fill: 'hsl(200 20% 55%)' }} />
                     <Tooltip
-                      contentStyle={{ background: 'hsl(220 25% 9%)', border: '1px solid hsl(200 60% 20%)', borderRadius: 8, fontSize: 11 }}
+                      contentStyle={{ background: 'hsl(220 25% 9%)', border: '1px solid hsl(200 60% 20%)', borderRadius: 8, fontSize: 10 }}
                       labelStyle={{ color: 'hsl(200 100% 95%)', fontFamily: 'Share Tech Mono' }}
                     />
-                    <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'Share Tech Mono' }} />
+                    <Legend wrapperStyle={{ fontSize: 9, fontFamily: 'Share Tech Mono' }} />
                     <Area type="monotone" dataKey="predicted" name="Predicted %" fill="hsl(200 100% 50% / 0.2)" stroke="hsl(200 100% 50%)" strokeWidth={2} />
                     <Area type="monotone" dataKey="actual" name="Actual %" fill="hsl(145 100% 50% / 0.15)" stroke="hsl(145 100% 50%)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground text-center py-6 font-mono-tech">
-                Predicted vs Actual comparison will appear after multiple prediction cycles
-              </p>
+              /* Show prediction ranges when no timeline data */
+              <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin">
+                {latestPredictions.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-5 gap-1 text-[9px] font-mono-tech text-muted-foreground px-1 pb-1 border-b border-border">
+                      <span className="col-span-2">Zone</span>
+                      <span className="text-center">+30m</span>
+                      <span className="text-center">+60m</span>
+                      <span className="text-center">+2h</span>
+                    </div>
+                    {latestPredictions.slice(0, 10).map((p, i) => (
+                      <div key={i} className="grid grid-cols-5 gap-1 text-[10px] font-mono-tech px-1 py-0.5 rounded hover:bg-secondary/50">
+                        <span className="col-span-2 text-foreground truncate">{p.zone}</span>
+                        <span className="text-center" style={{ color: `hsl(${120 - p.in30 * 1.2}, 80%, 55%)` }}>{p.in30}%</span>
+                        <span className="text-center" style={{ color: `hsl(${120 - p.in60 * 1.2}, 80%, 55%)` }}>{p.in60}%</span>
+                        <span className="text-center" style={{ color: `hsl(${120 - p.in120 * 1.2}, 80%, 55%)` }}>{p.in120}%</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4 font-mono-tech">
+                    Run predictions to see timeline
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
 
         {activeTab === 'zones' && (
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {zoneAccuracy.length > 0 ? (
-              zoneAccuracy.slice(0, 15).map((z, i) => {
-                const acc = z.accuracy;
-                const Icon = acc === null ? AlertTriangle : acc >= 80 ? CheckCircle2 : acc >= 60 ? AlertTriangle : XCircle;
-                const iconColor = acc === null ? 'text-muted-foreground' : acc >= 80 ? 'text-neon-green' : acc >= 60 ? 'text-neon-orange' : 'text-neon-red';
+          <div className="space-y-1.5 max-h-48 overflow-y-auto scrollbar-thin">
+            {(zoneAccuracy.length > 0 ? zoneAccuracy : latestPredictions.map(p => ({
+              zone_id: p.zone,
+              name: p.zone,
+              accuracy: null as number | null,
+              confidence: p.confidence,
+              predictions: 1,
+              matched: 0,
+            }))).slice(0, 12).map((z, i) => {
+              const acc = z.accuracy;
+              const conf = z.confidence;
+              const displayVal = acc ?? conf;
+              const Icon = acc === null ? Target : acc >= 80 ? CheckCircle2 : acc >= 60 ? AlertTriangle : XCircle;
+              const iconColor = acc === null ? 'text-neon-purple' : acc >= 80 ? 'text-neon-green' : acc >= 60 ? 'text-neon-orange' : 'text-neon-red';
 
-                return (
-                  <motion.div
-                    key={z.zone_id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="flex items-center gap-2 bg-secondary rounded-md px-3 py-2"
-                  >
-                    <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${iconColor}`} />
-                    <span className="font-mono-tech text-xs text-foreground truncate flex-1">{z.name}</span>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`font-mono-tech text-xs ${iconColor}`}>
-                        {acc !== null ? `${acc}%` : '—'}
-                      </span>
-                      <div className="w-16 h-1.5 bg-background rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${acc ?? 0}%`,
-                            background: acc === null
-                              ? 'hsl(200 20% 30%)'
-                              : acc >= 80
-                                ? 'hsl(145 100% 50%)'
-                                : acc >= 60
-                                  ? 'hsl(30 100% 55%)'
-                                  : 'hsl(0 100% 55%)',
-                          }}
-                        />
-                      </div>
-                      <span className="font-mono-tech text-[10px] text-muted-foreground w-6 text-right">{z.predictions}</span>
+              return (
+                <motion.div
+                  key={z.zone_id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                  className="flex items-center gap-2 bg-secondary rounded px-2 py-1.5"
+                >
+                  <Icon className={`w-3 h-3 flex-shrink-0 ${iconColor}`} />
+                  <span className="font-mono-tech text-[10px] text-foreground truncate flex-1">{z.name}</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`font-mono-tech text-[10px] ${iconColor}`}>
+                      {displayVal !== null ? `${Math.round(displayVal)}%` : '—'}
+                    </span>
+                    <div className="w-12 h-1 bg-background rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${displayVal ?? 0}%`,
+                          background: acc === null
+                            ? 'hsl(270 100% 60%)'
+                            : acc >= 80
+                              ? 'hsl(145 100% 50%)'
+                              : acc >= 60
+                                ? 'hsl(30 100% 55%)'
+                                : 'hsl(0 100% 55%)',
+                        }}
+                      />
                     </div>
-                  </motion.div>
-                );
-              })
-            ) : (
-              <p className="text-xs text-muted-foreground text-center py-6 font-mono-tech">
-                No zone-level data available yet
+                  </div>
+                </motion.div>
+              );
+            })}
+            {latestPredictions.length === 0 && zoneAccuracy.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4 font-mono-tech">
+                No zone data yet
               </p>
             )}
           </div>

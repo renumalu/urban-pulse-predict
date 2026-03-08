@@ -14,6 +14,8 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory, useBackend } = useSimulation(5000);
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'3d' | 'map'>('map');
   const [emergencyRoute, setEmergencyRoute] = useState<{ lat: number; lng: number }[]>([]);
   const handleRouteCalculated = useCallback((route: { lat: number; lng: number }[]) => {

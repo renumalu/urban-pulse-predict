@@ -32,7 +32,7 @@ interface ZoneTooltipData {
 }
 
 function Building({ position, height, congestion, onClick }: { 
-  position: [number, number, number]; height: number; congestion: number; onClick?: (e: ThreeEvent<MouseEvent>) => void;
+  position: [number, number, number]; height: number; congestion: number; onClick?: (e: any) => void;
 }) {
   const ref = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);

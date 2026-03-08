@@ -64,13 +64,28 @@ export default function CitizenReports() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchReports = async () => {
+    // Fetch reports without joining profiles (no FK relationship)
     const { data, error } = await supabase
       .from('citizen_reports')
-      .select('*, profiles(display_name)')
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setReports(data as any);
+      // Fetch profiles separately for display names
+      const userIds = [...new Set(data.map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', userIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p.display_name]) || []);
+      
+      const reportsWithProfiles = data.map(r => ({
+        ...r,
+        profiles: { display_name: profileMap.get(r.user_id) || null }
+      }));
+      
+      setReports(reportsWithProfiles as any);
     }
 
     if (user) {

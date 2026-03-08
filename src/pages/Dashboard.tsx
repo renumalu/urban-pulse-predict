@@ -127,6 +127,7 @@ export default function Dashboard() {
                 <CrisisSolutionView traffic={traffic} flood={flood} emergencyUnits={emergencyUnits} />
               } />
               <Route path="streams" element={<DataStreamsView />} />
+              <Route path="response" element={<EmergencyResponseView />} />
             </Routes>
           </main>
         </div>

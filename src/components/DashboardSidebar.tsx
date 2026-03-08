@@ -1,11 +1,12 @@
-import { Car, CloudRain, Ambulance, BarChart3, Map, Box, Radio, LogOut, Activity, FileText, Brain, Sparkles } from 'lucide-react';
+import { Car, CloudRain, Ambulance, BarChart3, Map, Radio, LogOut, Activity, FileText, Brain, BrainCircuit, Bell, Wifi, Shield } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -15,13 +16,23 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
 
-const navItems = [
-  { title: 'Overview', url: '/dashboard', icon: Map, color: 'text-primary' },
+const mainNav = [
+  { title: 'Live Map', url: '/dashboard', icon: Map, color: 'text-primary' },
   { title: 'Traffic Intelligence', url: '/dashboard/traffic', icon: Car, color: 'text-neon-orange' },
   { title: 'Flood & Weather', url: '/dashboard/flood', icon: CloudRain, color: 'text-neon-cyan' },
   { title: 'Emergency Control', url: '/dashboard/emergency', icon: Ambulance, color: 'text-neon-red' },
   { title: 'AI Predictions', url: '/dashboard/predictions', icon: Brain, color: 'text-neon-purple' },
   { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3, color: 'text-neon-green' },
+];
+
+const controlNav = [
+  { title: 'Smart City Control', url: '/dashboard/control', icon: BrainCircuit, color: 'text-neon-purple' },
+  { title: 'Live Alerts', url: '/dashboard/alerts', icon: Bell, color: 'text-neon-red' },
+  { title: 'Crisis → Solution', url: '/dashboard/crisis', icon: Shield, color: 'text-neon-orange' },
+  { title: 'Data Streams', url: '/dashboard/streams', icon: Wifi, color: 'text-neon-cyan' },
+];
+
+const extNav = [
   { title: 'Citizen Reports', url: '/reports', icon: FileText, color: 'text-muted-foreground' },
 ];
 
@@ -29,13 +40,41 @@ export function DashboardSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
-  const navigate = useNavigate();
   const { signOut } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
     return location.pathname.startsWith(path);
   };
+
+  const renderNavGroup = (items: typeof mainNav, label?: string) => (
+    <SidebarGroup>
+      {label && !collapsed && (
+        <SidebarGroupLabel className="text-[10px] font-mono-tech text-muted-foreground tracking-widest px-3 mb-1">
+          {label}
+        </SidebarGroupLabel>
+      )}
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild>
+                <NavLink
+                  to={item.url}
+                  end={item.url === '/dashboard'}
+                  className="flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                  activeClassName="bg-primary/10 text-primary font-medium"
+                >
+                  <item.icon className={`w-4 h-4 shrink-0 ${isActive(item.url) ? item.color : ''}`} />
+                  {!collapsed && <span className="text-sm font-mono-tech">{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border bg-card/80 backdrop-blur-sm">
@@ -54,27 +93,11 @@ export function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="py-2">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === '/dashboard'}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <item.icon className={`w-4 h-4 shrink-0 ${isActive(item.url) ? item.color : ''}`} />
-                      {!collapsed && <span className="text-sm font-mono-tech">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {renderNavGroup(mainNav, 'MONITORING')}
+        {!collapsed && <div className="mx-3 border-t border-border my-1" />}
+        {renderNavGroup(controlNav, 'CONTROL CENTER')}
+        {!collapsed && <div className="mx-3 border-t border-border my-1" />}
+        {renderNavGroup(extNav, 'EXTERNAL')}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border p-3">

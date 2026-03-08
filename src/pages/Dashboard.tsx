@@ -8,6 +8,7 @@ import FloodPanel from '@/components/FloodPanel';
 import EmergencyPanel from '@/components/EmergencyPanel';
 import AlertsPanel from '@/components/AlertsPanel';
 import AnalyticsPanel from '@/components/AnalyticsPanel';
+import TrafficPredictionPanel from '@/components/TrafficPredictionPanel';
 import { Activity, Radio, Map, Box, Database, Wifi, MessageSquarePlus, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -107,6 +108,9 @@ export default function Dashboard() {
 
         {/* Right sidebar */}
         <div className="lg:col-span-1 space-y-4 overflow-y-auto">
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}>
+            <TrafficPredictionPanel />
+          </motion.div>
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
             <AlertsPanel alerts={alerts} />
           </motion.div>

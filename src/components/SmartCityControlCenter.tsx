@@ -114,6 +114,14 @@ export default function SmartCityControlCenter({ onRouteSelected }: SmartCityCon
       toast.info('🔇 Push notifications disabled');
       return;
     }
+    // Check if Notification API is available (blocked in iframes)
+    if (typeof Notification === 'undefined') {
+      toast.warning('⚠️ Notifications are not available in embedded preview. Open in a new tab to enable.');
+      // Still toggle the internal state so the UI reflects the intent
+      setNotificationsEnabled(true);
+      toast.success('🔔 In-app alert toasts will be shown for critical events');
+      return;
+    }
     try {
       const granted = await requestNotificationPermission();
       setNotificationsEnabled(granted);
@@ -121,10 +129,13 @@ export default function SmartCityControlCenter({ onRouteSelected }: SmartCityCon
         toast.success('🔔 Push notifications enabled — you will receive critical alerts');
         sendBrowserNotification('UrbanPulse', 'You will now receive critical alerts');
       } else {
-        toast.error('Notification permission denied by browser. Check your browser settings.');
+        // Even if browser denies, enable in-app toasts
+        setNotificationsEnabled(true);
+        toast.info('🔔 Browser denied push — in-app alert toasts enabled instead');
       }
     } catch {
-      toast.error('Notifications not supported in this browser context');
+      setNotificationsEnabled(true);
+      toast.info('🔔 In-app alert toasts enabled (push not supported here)');
     }
   };
 

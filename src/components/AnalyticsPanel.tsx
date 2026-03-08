@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Activity, Clock, Zap } from 'lucide-react';
+import { Activity, Clock, Zap, Download, FileSpreadsheet } from 'lucide-react';
 import type { TrafficData, FloodData, AccidentData } from '@/lib/simulation';
+import { exportTrafficCSV, exportFloodCSV, exportAccidentsCSV, exportFullReport } from '@/lib/csv-export';
 
 interface AnalyticsPanelProps {
   traffic: TrafficData[];
@@ -15,9 +16,18 @@ export default function AnalyticsPanel({ traffic, flood, accidents }: AnalyticsP
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 space-y-4 border-glow">
-      <div className="flex items-center gap-2">
-        <Activity className="w-5 h-5 text-neon-purple" />
-        <h3 className="font-display text-sm tracking-wider text-neon-purple">ANALYTICS</h3>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Activity className="w-5 h-5 text-neon-purple" />
+          <h3 className="font-display text-sm tracking-wider text-neon-purple">ANALYTICS</h3>
+        </div>
+        <button
+          onClick={() => exportFullReport(traffic, flood, accidents)}
+          className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-mono-tech bg-neon-purple/10 text-neon-purple hover:bg-neon-purple/20 transition-colors"
+          title="Export full city report as CSV"
+        >
+          <Download className="w-3 h-3" /> Export
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -36,6 +46,18 @@ export default function AnalyticsPanel({ traffic, flood, accidents }: AnalyticsP
           <div className="font-mono-tech text-lg text-foreground">{Math.round(85 + Math.random() * 10)}%</div>
           <div className="text-xs text-muted-foreground">System Health</div>
         </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button onClick={() => exportTrafficCSV(traffic)} className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] font-mono-tech bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+          <FileSpreadsheet className="w-3 h-3" /> Traffic CSV
+        </button>
+        <button onClick={() => exportFloodCSV(flood)} className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] font-mono-tech bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors">
+          <FileSpreadsheet className="w-3 h-3" /> Flood CSV
+        </button>
+        <button onClick={() => exportAccidentsCSV(accidents)} className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] font-mono-tech bg-neon-orange/10 text-neon-orange hover:bg-neon-orange/20 transition-colors">
+          <FileSpreadsheet className="w-3 h-3" /> Accidents CSV
+        </button>
       </div>
 
       <div>

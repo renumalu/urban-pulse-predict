@@ -47,18 +47,40 @@ export default function FloodPanel({ flood, history }: FloodPanelProps) {
           />
         ))}
       </div>
-      <div className="text-xs text-muted-foreground font-mono-tech">24h Rainfall Trend</div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground font-mono-tech">24h Rainfall Trend</span>
+        {/* Legend */}
+        <div className="flex items-center gap-2 text-[9px] font-mono-tech">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-neon-green" />
+            <span className="text-muted-foreground">Safe</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-neon-orange" />
+            <span className="text-muted-foreground">Risk</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-neon-red" />
+            <span className="text-muted-foreground">Critical</span>
+          </div>
+        </div>
+      </div>
 
-      <div className="space-y-2 max-h-40 overflow-y-auto">
-        {flood.sort((a, b) => b.riskLevel - a.riskLevel).map(f => (
+      <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin pr-1">
+        {flood.sort((a, b) => b.riskLevel - a.riskLevel).slice(0, 12).map(f => (
           <div key={f.zoneId} className="flex items-center justify-between text-sm">
-            <span className="font-mono-tech text-muted-foreground truncate w-32">{f.zoneName}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{f.rainfall.toFixed(0)}mm</span>
-              <div className={`w-3 h-3 rounded-full ${f.riskLevel > 0.7 ? 'bg-neon-red animate-pulse-neon' : f.riskLevel > 0.4 ? 'bg-neon-orange' : 'bg-neon-green'}`} />
+            <span className="font-mono-tech text-muted-foreground truncate flex-1 mr-2">{f.zoneName}</span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-xs text-muted-foreground w-12 text-right">{f.rainfall.toFixed(0)}mm</span>
+              <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${f.riskLevel > 0.7 ? 'bg-neon-red animate-pulse-neon' : f.riskLevel > 0.4 ? 'bg-neon-orange' : 'bg-neon-green'}`} />
             </div>
           </div>
         ))}
+        {flood.length > 12 && (
+          <div className="text-[10px] text-muted-foreground font-mono-tech text-center pt-1">
+            +{flood.length - 12} more zones
+          </div>
+        )}
       </div>
     </div>
   );

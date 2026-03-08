@@ -66,14 +66,31 @@ export default function FloodView({
         {/* Zone List */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
           <div className="bg-card border border-border rounded-lg p-4 border-glow">
-            <h4 className="text-xs text-muted-foreground font-display tracking-wider mb-3">TOP RAINFALL ZONES</h4>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs text-muted-foreground font-display tracking-wider">TOP RAINFALL ZONES</h4>
+              {/* Legend */}
+              <div className="flex items-center gap-3 text-[9px] font-mono-tech">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-neon-green" />
+                  <span className="text-muted-foreground">Low</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-neon-orange" />
+                  <span className="text-muted-foreground">Medium</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-neon-red" />
+                  <span className="text-muted-foreground">Critical</span>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-thin pr-1">
               {[...flood].sort((a, b) => b.rainfall - a.rainfall).slice(0, 10).map(f => (
                 <div key={f.zoneId} className="flex items-center justify-between text-sm">
-                  <span className="font-mono-tech text-foreground truncate w-32">{f.zoneName}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{f.rainfall.toFixed(1)}mm</span>
-                    <div className={`w-2 h-2 rounded-full ${f.riskLevel > 0.7 ? 'bg-neon-red animate-pulse' : f.riskLevel > 0.4 ? 'bg-neon-orange' : 'bg-neon-green'}`} />
+                  <span className="font-mono-tech text-foreground truncate flex-1 mr-2">{f.zoneName}</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-muted-foreground w-14 text-right">{f.rainfall.toFixed(1)}mm</span>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${f.riskLevel > 0.7 ? 'bg-neon-red animate-pulse' : f.riskLevel > 0.4 ? 'bg-neon-orange' : 'bg-neon-green'}`} />
                   </div>
                 </div>
               ))}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useSimulation } from '@/hooks/useSimulation';
 import City3DView from '@/components/City3DView';
@@ -13,6 +13,11 @@ import { Activity, Radio, Map, Box, Database, Wifi } from 'lucide-react';
 export default function Dashboard() {
   const { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory, useBackend } = useSimulation(5000);
   const [viewMode, setViewMode] = useState<'3d' | 'map'>('map');
+  const [emergencyRoute, setEmergencyRoute] = useState<{ lat: number; lng: number }[]>([]);
+  const handleRouteCalculated = useCallback((route: { lat: number; lng: number }[]) => {
+    setEmergencyRoute(route);
+    setViewMode('map');
+  }, []);
 
   return (
     <div className="min-h-screen bg-background grid-bg scanline">
@@ -80,7 +85,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 min-h-[400px]">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="h-full">
             {viewMode === 'map' ? (
-              <CityMapView traffic={traffic} flood={flood} accidents={accidents} emergencyUnits={emergencyUnits} />
+              <CityMapView traffic={traffic} flood={flood} accidents={accidents} emergencyUnits={emergencyUnits} emergencyRoute={emergencyRoute} />
             ) : (
               <City3DView traffic={traffic} flood={flood} accidents={accidents} />
             )}
@@ -93,7 +98,7 @@ export default function Dashboard() {
             <AlertsPanel alerts={alerts} />
           </motion.div>
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-            <EmergencyPanel units={emergencyUnits} />
+            <EmergencyPanel units={emergencyUnits} onRouteCalculated={handleRouteCalculated} />
           </motion.div>
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
             <AnalyticsPanel traffic={traffic} flood={flood} accidents={accidents} />

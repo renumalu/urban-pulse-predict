@@ -71,11 +71,16 @@ export default function TrafficPanel({ traffic, history }: TrafficPanelProps) {
       </div>
       <div className="text-xs text-muted-foreground font-mono-tech">24h Congestion History</div>
 
-      <div className="space-y-2 max-h-48 overflow-y-auto">
-        {traffic.sort((a, b) => b.congestionLevel - a.congestionLevel).map(t => (
+      <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent pr-1">
+        {traffic.sort((a, b) => b.congestionLevel - a.congestionLevel).slice(0, 12).map(t => (
           <CongestionBar key={t.zoneId} label={t.zoneName} level={t.congestionLevel} />
         ))}
       </div>
+      {traffic.length > 12 && (
+        <div className="text-[10px] text-muted-foreground font-mono-tech text-center">
+          +{traffic.length - 12} more zones
+        </div>
+      )}
     </div>
   );
 }

@@ -152,6 +152,7 @@ export default function AIPredictionsView() {
         ) : (
           predictions.map((p, i) => {
             const trend = getTrendLabel(p.trend);
+            const uniqueKey = `${p.zone_id}-${i}`;
             const bars = [
               { label: 'Now', value: p.current_congestion },
               { label: '30m', value: p.predicted_30min },

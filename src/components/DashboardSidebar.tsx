@@ -27,7 +27,8 @@ const mainNav = [
 
 const controlNav = [
   { title: 'Smart City Control', url: '/dashboard/control', icon: BrainCircuit, color: 'text-neon-purple' },
-  { title: 'Live Alerts', url: '/dashboard/alerts', icon: Bell, color: 'text-neon-red' },
+  { title: 'Emergency Response', url: '/dashboard/response', icon: Siren, color: 'text-neon-red' },
+  { title: 'Live Alerts', url: '/dashboard/alerts', icon: Bell, color: 'text-neon-orange' },
   { title: 'Crisis → Solution', url: '/dashboard/crisis', icon: Shield, color: 'text-neon-orange' },
   { title: 'Data Streams', url: '/dashboard/streams', icon: Wifi, color: 'text-neon-cyan' },
 ];

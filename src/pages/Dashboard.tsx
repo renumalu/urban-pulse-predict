@@ -13,6 +13,7 @@ import ControlCenterView from '@/pages/dashboard/ControlCenterView';
 import LiveAlertsView from '@/pages/dashboard/LiveAlertsView';
 import CrisisSolutionView from '@/pages/dashboard/CrisisSolutionView';
 import DataStreamsView from '@/pages/dashboard/DataStreamsView';
+import EmergencyResponseView from '@/pages/dashboard/EmergencyResponseView';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Box, Map, Database, Wifi } from 'lucide-react';
 

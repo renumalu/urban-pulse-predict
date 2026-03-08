@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Ambulance, Flame, Shield, Siren, Phone, Navigation, Loader2,
   AlertTriangle, MapPin, Clock, CheckCircle2, XCircle, Radio,
@@ -185,10 +185,9 @@ export default function EmergencyResponseCenter() {
         </div>
 
         <div className="p-4">
-          <AnimatePresence mode="wait">
-            {/* DISPATCH TAB */}
-            {activeTab === 'dispatch' && (
-              <motion.div key="dispatch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+          {/* DISPATCH TAB */}
+          {activeTab === 'dispatch' && (
+            <motion.div key="dispatch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                 <div className="text-xs font-mono-tech text-muted-foreground mb-2">
                   Dispatch emergency services to any zone. Alerts are logged and nearest available unit is auto-assigned.
                 </div>
@@ -259,7 +258,7 @@ export default function EmergencyResponseCenter() {
 
             {/* CALLS TAB */}
             {activeTab === 'calls' && (
-              <motion.div key="calls" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+              <motion.div key="calls" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                 {calls.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Phone className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -306,7 +305,7 @@ export default function EmergencyResponseCenter() {
 
             {/* UNITS TAB */}
             {activeTab === 'units' && (
-              <motion.div key="units" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+              <motion.div key="units" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                 {/* Unit type breakdown */}
                 {(['ambulance', 'fire', 'police'] as const).map(type => {
                   const cfg = unitTypeConfig[type];
@@ -354,7 +353,7 @@ export default function EmergencyResponseCenter() {
 
             {/* HISTORY TAB */}
             {activeTab === 'history' && (
-              <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-2">
+              <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
                 <div className="text-xs font-mono-tech text-muted-foreground mb-2">
                   Recent emergency alerts and dispatch history
                 </div>
@@ -379,7 +378,7 @@ export default function EmergencyResponseCenter() {
                 ))}
               </motion.div>
             )}
-          </AnimatePresence>
+          {/* end tabs */}
         </div>
       </div>
     </div>

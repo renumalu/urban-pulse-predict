@@ -9,6 +9,7 @@ import EmergencyPanel from '@/components/EmergencyPanel';
 import AlertsPanel from '@/components/AlertsPanel';
 import AnalyticsPanel from '@/components/AnalyticsPanel';
 import TrafficPredictionPanel from '@/components/TrafficPredictionPanel';
+import PredictionTimeline from '@/components/PredictionTimeline';
 import { Activity, Radio, Map, Box, Database, Wifi, MessageSquarePlus, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';

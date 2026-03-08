@@ -3,21 +3,15 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { TrafficData, FloodData, AccidentData } from '@/lib/simulation';
+import { INDIAN_ZONES } from '@/lib/india-zones';
 
-const ZONE_GRID: { id: number; name: string; cx: number; cz: number }[] = [
-  { id: 0, name: 'Downtown Core', cx: -3.6, cz: -3.6 },
-  { id: 1, name: 'Financial District', cx: -1.2, cz: -3.6 },
-  { id: 2, name: 'Riverside', cx: 1.2, cz: -3.6 },
-  { id: 3, name: 'Tech Park', cx: 3.6, cz: -3.6 },
-  { id: 4, name: 'Old Town', cx: -3.6, cz: -1.2 },
-  { id: 5, name: 'Harbor District', cx: -1.2, cz: -1.2 },
-  { id: 6, name: 'University Quarter', cx: 1.2, cz: -1.2 },
-  { id: 7, name: 'Industrial Zone', cx: 3.6, cz: -1.2 },
-  { id: 8, name: 'Residential North', cx: -3.6, cz: 1.2 },
-  { id: 9, name: 'Residential South', cx: -1.2, cz: 1.2 },
-  { id: 10, name: 'Commercial Strip', cx: 1.2, cz: 1.2 },
-  { id: 11, name: 'Green Belt', cx: 3.6, cz: 1.2 },
-];
+// Generate a 6x6 grid for 36 zones
+const ZONE_GRID = INDIAN_ZONES.map((z, i) => ({
+  id: i,
+  name: z.name,
+  cx: (i % 6 - 2.5) * 2.2,
+  cz: (Math.floor(i / 6) - 2.5) * 2.2,
+}));
 
 interface ZoneTooltipData {
   name: string;
@@ -48,7 +42,7 @@ function Building({ position, height, congestion, onClick }: {
       onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
       onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
     >
-      <boxGeometry args={[0.6, height, 0.6]} />
+      <boxGeometry args={[0.35, height, 0.35]} />
       <meshStandardMaterial
         color={hovered ? hoverColor : color}
         emissive={hovered ? hoverColor : color}
@@ -69,9 +63,9 @@ function ZoneGroup({ zone, traffic, flood, accidents, onZoneClick }: {
 }) {
   const buildings = useMemo(() => {
     const b: { pos: [number, number, number]; h: number }[] = [];
-    for (let dx = -0.8; dx <= 0.8; dx += 0.8) {
-      for (let dz = -0.8; dz <= 0.8; dz += 0.8) {
-        const h = 0.5 + Math.abs(Math.sin(zone.cx * 3 + dx * 7) * Math.cos(zone.cz * 3 + dz * 7)) * 2.5;
+    for (let dx = -0.4; dx <= 0.4; dx += 0.4) {
+      for (let dz = -0.4; dz <= 0.4; dz += 0.4) {
+        const h = 0.3 + Math.abs(Math.sin(zone.cx * 3 + dx * 7) * Math.cos(zone.cz * 3 + dz * 7)) * 1.8;
         b.push({ pos: [zone.cx + dx, 0, zone.cz + dz], h });
       }
     }
@@ -94,7 +88,7 @@ function ZoneGroup({ zone, traffic, flood, accidents, onZoneClick }: {
       floodRisk: f?.riskLevel ?? 0,
       rainfall: f?.rainfall ?? 0,
       accidents: zoneAccidents.length,
-      position: [zone.cx, 2.5, zone.cz],
+      position: [zone.cx, 2, zone.cz],
     });
   }, [zone, t, f, zoneAccidents]);
 
@@ -132,7 +126,7 @@ function ZoneTooltip({ data, onClose }: { data: ZoneTooltipData; onClose: () => 
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Vehicles</span>
-            <span className="text-foreground">{data.vehicles}</span>
+            <span className="text-foreground">{data.vehicles.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Avg Speed</span>
@@ -163,48 +157,36 @@ function ZoneTooltip({ data, onClose }: { data: ZoneTooltipData; onClose: () => 
 
 function Roads() {
   const roadColor = new THREE.Color(0x1a2a3a);
+  const roads: [number, number, number, number][] = [];
+  // Horizontal roads
+  for (let row = -2.5; row <= 2.5; row += 1) {
+    roads.push([0, 0.01, row * 2.2, 0]); // horizontal
+  }
+  // Vertical roads
+  for (let col = -2.5; col <= 2.5; col += 1) {
+    roads.push([col * 2.2, 0.01, 0, Math.PI / 2]); // vertical
+  }
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <planeGeometry args={[0.5, 12]} />
-        <meshStandardMaterial color={roadColor} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <planeGeometry args={[12, 0.5]} />
-        <meshStandardMaterial color={roadColor} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[2.4, 0.01, 0]}>
-        <planeGeometry args={[0.4, 12]} />
-        <meshStandardMaterial color={roadColor} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-2.4, 0.01, 0]}>
-        <planeGeometry args={[0.4, 12]} />
-        <meshStandardMaterial color={roadColor} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 2.4]}>
-        <planeGeometry args={[12, 0.4]} />
-        <meshStandardMaterial color={roadColor} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -2.4]}>
-        <planeGeometry args={[12, 0.4]} />
-        <meshStandardMaterial color={roadColor} />
-      </mesh>
+      {roads.map((r, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, r[3] || 0]} position={[r[0], r[1], r[2]]}>
+          <planeGeometry args={[0.3, 16]} />
+          <meshStandardMaterial color={roadColor} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
 function TrafficParticles({ traffic }: { traffic: TrafficData[] }) {
   const ref = useRef<THREE.Points>(null);
-  const count = 200;
+  const count = 300;
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      const road = Math.floor(Math.random() * 6);
-      const t = (Math.random() - 0.5) * 10;
-      const roads = [[0, t], [t, 0], [2.4, t], [-2.4, t], [t, 2.4], [t, -2.4]];
-      arr[i * 3] = roads[road][0] + (Math.random() - 0.5) * 0.3;
+      arr[i * 3] = (Math.random() - 0.5) * 14;
       arr[i * 3 + 1] = 0.1;
-      arr[i * 3 + 2] = roads[road][1] + (Math.random() - 0.5) * 0.3;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 14;
     }
     return arr;
   }, []);
@@ -225,8 +207,8 @@ function TrafficParticles({ traffic }: { traffic: TrafficData[] }) {
     for (let i = 0; i < count; i++) {
       pos[i * 3] += (Math.random() - 0.5) * delta * speed;
       pos[i * 3 + 2] += (Math.random() - 0.5) * delta * speed;
-      if (Math.abs(pos[i * 3]) > 6) pos[i * 3] *= -0.5;
-      if (Math.abs(pos[i * 3 + 2]) > 6) pos[i * 3 + 2] *= -0.5;
+      if (Math.abs(pos[i * 3]) > 7) pos[i * 3] *= -0.5;
+      if (Math.abs(pos[i * 3 + 2]) > 7) pos[i * 3 + 2] *= -0.5;
     }
     ref.current.geometry.attributes.position.needsUpdate = true;
   });
@@ -237,7 +219,7 @@ function TrafficParticles({ traffic }: { traffic: TrafficData[] }) {
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.08} vertexColors transparent opacity={0.8} sizeAttenuation />
+      <pointsMaterial size={0.06} vertexColors transparent opacity={0.8} sizeAttenuation />
     </points>
   );
 }
@@ -247,33 +229,16 @@ function FloodLayer({ flood }: { flood: FloodData[] }) {
   const waterHeight = avgRisk * 0.5;
   return waterHeight > 0.02 ? (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, waterHeight, 0]}>
-      <planeGeometry args={[12, 12]} />
+      <planeGeometry args={[16, 16]} />
       <meshStandardMaterial color="#0066cc" transparent opacity={avgRisk * 0.4} />
     </mesh>
   ) : null;
 }
 
-function AccidentMarkers({ accidents }: { accidents: AccidentData[] }) {
-  return (
-    <group>
-      {accidents.slice(0, 8).map((a) => (
-        <mesh key={a.id} position={[a.lat, 0.3, a.lng]}>
-          <sphereGeometry args={[0.1, 8, 8]} />
-          <meshStandardMaterial
-            color={a.severity === 'high' ? '#ff3333' : a.severity === 'medium' ? '#ff9933' : '#ffcc00'}
-            emissive={a.severity === 'high' ? '#ff0000' : '#ff6600'}
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 function Ground() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-      <planeGeometry args={[14, 14]} />
+      <planeGeometry args={[18, 18]} />
       <meshStandardMaterial color="#0a1520" />
     </mesh>
   );
@@ -304,11 +269,10 @@ function Scene({ traffic, flood, accidents }: City3DViewProps) {
       ))}
       <TrafficParticles traffic={traffic} />
       <FloodLayer flood={flood} />
-      <AccidentMarkers accidents={accidents} />
       {selectedZone && (
         <ZoneTooltip data={selectedZone} onClose={() => setSelectedZone(null)} />
       )}
-      <OrbitControls enableDamping dampingFactor={0.05} minDistance={3} maxDistance={20} />
+      <OrbitControls enableDamping dampingFactor={0.05} minDistance={4} maxDistance={25} />
     </>
   );
 }
@@ -316,9 +280,9 @@ function Scene({ traffic, flood, accidents }: City3DViewProps) {
 export default function City3DView({ traffic, flood, accidents }: City3DViewProps) {
   return (
     <div className="h-full w-full rounded-lg overflow-hidden border border-border glow-blue">
-      <Canvas camera={{ position: [8, 8, 8], fov: 50 }} shadows>
+      <Canvas camera={{ position: [10, 10, 10], fov: 50 }} shadows>
         <color attach="background" args={['#060d15']} />
-        <fog attach="fog" args={['#060d15', 15, 30]} />
+        <fog attach="fog" args={['#060d15', 18, 35]} />
         <ambientLight intensity={0.15} />
         <directionalLight position={[5, 10, 5]} intensity={0.4} castShadow />
         <pointLight position={[0, 5, 0]} intensity={0.3} color="#0088ff" />

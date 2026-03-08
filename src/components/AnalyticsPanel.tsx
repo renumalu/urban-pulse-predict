@@ -48,6 +48,18 @@ export default function AnalyticsPanel({ traffic, flood, accidents }: AnalyticsP
         </div>
       </div>
 
+      <div className="flex gap-2">
+        <button onClick={() => exportTrafficCSV(traffic)} className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] font-mono-tech bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+          <FileSpreadsheet className="w-3 h-3" /> Traffic CSV
+        </button>
+        <button onClick={() => exportFloodCSV(flood)} className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] font-mono-tech bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors">
+          <FileSpreadsheet className="w-3 h-3" /> Flood CSV
+        </button>
+        <button onClick={() => exportAccidentsCSV(accidents)} className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] font-mono-tech bg-neon-orange/10 text-neon-orange hover:bg-neon-orange/20 transition-colors">
+          <FileSpreadsheet className="w-3 h-3" /> Accidents CSV
+        </button>
+      </div>
+
       <div>
         <h4 className="text-xs text-muted-foreground font-display tracking-wider mb-2">TOP CONGESTION ZONES</h4>
         <div className="space-y-1">

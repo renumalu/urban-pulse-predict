@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 import type { EmergencyUnit } from '@/lib/simulation';
-import { Siren, Flame, Shield, Ambulance } from 'lucide-react';
+import { Siren, Flame, Shield, Ambulance, Navigation, Loader2 } from 'lucide-react';
 
 interface EmergencyPanelProps {
   units: EmergencyUnit[];
+  onRouteCalculated?: (route: { lat: number; lng: number }[]) => void;
 }
 
 const iconMap = {
@@ -18,9 +21,46 @@ const statusColors = {
   'en-route': 'text-neon-red',
 };
 
-export default function EmergencyPanel({ units }: EmergencyPanelProps) {
+const ZONE_POSITIONS: Record<string, [number, number]> = {
+  z0: [40.7128, -74.0060], z1: [40.7075, -74.0021], z2: [40.7189, -74.0120],
+  z3: [40.7282, -73.9942], z4: [40.7148, -73.9980], z5: [40.7020, -74.0150],
+  z6: [40.7295, -73.9965], z7: [40.7050, -74.0080], z8: [40.7350, -73.9900],
+  z9: [40.6980, -74.0040], z10: [40.7200, -74.0000], z11: [40.7320, -74.0100],
+};
+
+const ZONE_NAMES = Object.entries({
+  z0: 'Downtown Core', z1: 'Financial District', z2: 'Riverside', z3: 'Tech Park',
+  z4: 'Old Town', z5: 'Harbor District', z6: 'University Quarter', z7: 'Industrial Zone',
+  z8: 'Residential North', z9: 'Residential South', z10: 'Commercial Strip', z11: 'Green Belt',
+});
+
+export default function EmergencyPanel({ units, onRouteCalculated }: EmergencyPanelProps) {
   const available = units.filter(u => u.status === 'available').length;
   const dispatched = units.filter(u => u.status !== 'available').length;
+
+  const [fromZone, setFromZone] = useState('z0');
+  const [toZone, setToZone] = useState('z3');
+  const [routing, setRouting] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; time: number; waypoints: number } | null>(null);
+
+  const calculateRoute = async () => {
+    setRouting(true);
+    setRouteInfo(null);
+    try {
+      const from = ZONE_POSITIONS[fromZone];
+      const to = ZONE_POSITIONS[toZone];
+      const { data, error } = await supabase.functions.invoke('emergency-route', {
+        body: { start_lat: from[0], start_lng: from[1], end_lat: to[0], end_lng: to[1] },
+      });
+      if (error) throw error;
+      setRouteInfo({ distance: data.distance_km, time: data.estimated_time_min, waypoints: data.waypoints });
+      onRouteCalculated?.(data.route);
+    } catch (err) {
+      console.error('Route calculation failed:', err);
+    } finally {
+      setRouting(false);
+    }
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg p-4 space-y-4 border-glow">
@@ -40,7 +80,69 @@ export default function EmergencyPanel({ units }: EmergencyPanelProps) {
         </div>
       </div>
 
-      <div className="space-y-2 max-h-48 overflow-y-auto">
+      {/* Emergency Route Planner */}
+      <div className="border-t border-border pt-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <Navigation className="w-4 h-4 text-neon-cyan" />
+          <h4 className="font-display text-xs tracking-wider text-neon-cyan">ROUTE PLANNER</h4>
+        </div>
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs text-muted-foreground font-mono-tech">From</label>
+            <select
+              value={fromZone}
+              onChange={e => setFromZone(e.target.value)}
+              className="w-full bg-secondary text-foreground text-xs font-mono-tech rounded-md px-2 py-1.5 border border-border focus:border-primary outline-none"
+            >
+              {ZONE_NAMES.map(([id, name]) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground font-mono-tech">To</label>
+            <select
+              value={toZone}
+              onChange={e => setToZone(e.target.value)}
+              className="w-full bg-secondary text-foreground text-xs font-mono-tech rounded-md px-2 py-1.5 border border-border focus:border-primary outline-none"
+            >
+              {ZONE_NAMES.map(([id, name]) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={calculateRoute}
+            disabled={routing || fromZone === toZone}
+            className="w-full flex items-center justify-center gap-2 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-mono-tech text-xs py-2 rounded-md transition-colors disabled:opacity-40"
+          >
+            {routing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Navigation className="w-3 h-3" />}
+            {routing ? 'CALCULATING...' : 'DISPATCH ROUTE'}
+          </button>
+        </div>
+
+        {routeInfo && (
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-secondary rounded-md p-2 space-y-1"
+          >
+            <div className="flex justify-between text-xs font-mono-tech">
+              <span className="text-muted-foreground">Distance</span>
+              <span className="text-neon-cyan">{routeInfo.distance} km</span>
+            </div>
+            <div className="flex justify-between text-xs font-mono-tech">
+              <span className="text-muted-foreground">ETA</span>
+              <span className="text-neon-green">{routeInfo.time} min</span>
+            </div>
+            <div className="flex justify-between text-xs font-mono-tech">
+              <span className="text-muted-foreground">Waypoints</span>
+              <span className="text-foreground">{routeInfo.waypoints}</span>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Unit List */}
+      <div className="space-y-2 max-h-36 overflow-y-auto">
         {units.map((u, i) => {
           const Icon = iconMap[u.type];
           return (

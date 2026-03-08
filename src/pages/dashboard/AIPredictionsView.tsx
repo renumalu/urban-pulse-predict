@@ -166,9 +166,17 @@ export default function AIPredictionsView() {
                 transition={{ delay: i * 0.03 }}
                 className="bg-card border border-border rounded-lg p-3.5 space-y-2.5 border-glow"
               >
-                {/* Zone name + trend */}
+                {/* Zone name + capital + trend */}
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-sm tracking-wide text-foreground">{p.zone_name}</span>
+                  <div className="flex flex-col">
+                    <span className="font-display text-sm tracking-wide text-foreground">{p.zone_name}</span>
+                    {p.capital && (
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono-tech">
+                        <MapPin className="w-2.5 h-2.5" />
+                        {p.capital}
+                      </span>
+                    )}
+                  </div>
                   <div className={`flex items-center gap-1 ${trend.color}`}>
                     {trend.icon}
                     <span className="text-xs font-mono-tech">{trend.label}</span>

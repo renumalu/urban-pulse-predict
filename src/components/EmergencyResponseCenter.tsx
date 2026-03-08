@@ -305,7 +305,7 @@ export default function EmergencyResponseCenter() {
 
             {/* UNITS TAB */}
             {activeTab === 'units' && (
-              <motion.div key="units" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+              <motion.div key="units" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                 {/* Unit type breakdown */}
                 {(['ambulance', 'fire', 'police'] as const).map(type => {
                   const cfg = unitTypeConfig[type];

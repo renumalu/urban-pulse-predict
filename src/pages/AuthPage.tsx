@@ -26,7 +26,7 @@ export default function AuthPage() {
       if (error) {
         setError(error.message);
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
     } else {
       if (!displayName.trim()) {

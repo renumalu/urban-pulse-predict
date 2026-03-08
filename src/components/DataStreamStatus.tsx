@@ -15,15 +15,14 @@ interface DataStream {
 
 async function measureQuery(
   table: string,
-  select: string,
   limit: number
 ): Promise<{ latency: number; count: number; lastAt: string | null }> {
   const start = performance.now();
   const { data, error } = await supabase
     .from(table)
-    .select(select)
-    .order('recorded_at' in {} ? 'recorded_at' : 'created_at', { ascending: false })
+    .select('*')
     .limit(limit);
+  const latency = Math.round(performance.now() - start);
   const latency = Math.round(performance.now() - start);
 
   if (error) return { latency, count: 0, lastAt: null };

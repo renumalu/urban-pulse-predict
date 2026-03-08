@@ -71,6 +71,22 @@ export default function TrafficPanel({ traffic, history }: TrafficPanelProps) {
       </div>
       <div className="text-xs text-muted-foreground font-mono-tech">24h Congestion History</div>
 
+      {/* Legend */}
+      <div className="flex items-center gap-4 text-[11px] font-mono-tech">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-neon-green flex-shrink-0" />
+          <span className="text-muted-foreground">Low</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-neon-orange flex-shrink-0" />
+          <span className="text-neon-orange">Medium</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-neon-red flex-shrink-0" />
+          <span className="text-neon-red">High</span>
+        </div>
+      </div>
+
       <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent pr-1">
         {traffic.sort((a, b) => b.congestionLevel - a.congestionLevel).slice(0, 12).map(t => (
           <CongestionBar key={t.zoneId} label={t.zoneName} level={t.congestionLevel} />

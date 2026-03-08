@@ -66,22 +66,20 @@ export default function FloodView({
         {/* Zone List */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
           <div className="bg-card border border-border rounded-lg p-4 border-glow">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs text-muted-foreground font-display tracking-wider">TOP RAINFALL ZONES</h4>
-              {/* Legend */}
-              <div className="flex items-center gap-3 text-[9px] font-mono-tech">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-neon-green" />
-                  <span className="text-muted-foreground">Low</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-neon-orange" />
-                  <span className="text-muted-foreground">Medium</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-neon-red" />
-                  <span className="text-muted-foreground">Critical</span>
-                </div>
+            <h4 className="text-xs text-muted-foreground font-display tracking-wider mb-2">TOP RAINFALL ZONES</h4>
+            {/* Legend */}
+            <div className="flex items-center gap-4 text-[11px] font-mono-tech mb-3">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-neon-green flex-shrink-0" />
+                <span className="text-muted-foreground">Low</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-neon-orange flex-shrink-0" />
+                <span className="text-neon-orange">Medium</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-neon-red flex-shrink-0" />
+                <span className="text-neon-red">Critical</span>
               </div>
             </div>
             <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-thin pr-1">

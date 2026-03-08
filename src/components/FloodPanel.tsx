@@ -47,22 +47,20 @@ export default function FloodPanel({ flood, history }: FloodPanelProps) {
           />
         ))}
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground font-mono-tech">24h Rainfall Trend</span>
-        {/* Legend */}
-        <div className="flex items-center gap-2 text-[9px] font-mono-tech">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-neon-green" />
-            <span className="text-muted-foreground">Safe</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-neon-orange" />
-            <span className="text-muted-foreground">Risk</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-neon-red" />
-            <span className="text-muted-foreground">Critical</span>
-          </div>
+      <div className="text-xs text-muted-foreground font-mono-tech">24h Rainfall Trend</div>
+      {/* Legend */}
+      <div className="flex items-center gap-4 text-[11px] font-mono-tech">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-neon-green flex-shrink-0" />
+          <span className="text-muted-foreground">Safe</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-neon-orange flex-shrink-0" />
+          <span className="text-neon-orange">Risk</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-neon-red flex-shrink-0" />
+          <span className="text-neon-red">Critical</span>
         </div>
       </div>
 

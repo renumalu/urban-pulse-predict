@@ -25,7 +25,7 @@ export default function AlertsPanel({ alerts }: AlertsPanelProps) {
         )}
       </div>
 
-      <div className="space-y-2 max-h-64 overflow-y-auto">
+      <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin pr-1">
         <AnimatePresence mode="popLayout">
           {alerts.slice(0, 8).map((alert) => {
             const config = severityConfig[alert.severity];

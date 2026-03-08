@@ -132,8 +132,8 @@ export default function EmergencyPanel({ units, onRouteCalculated }: EmergencyPa
       </div>
 
       {/* Unit List */}
-      <div className="space-y-2 max-h-36 overflow-y-auto">
-        {units.map((u, i) => {
+      <div className="space-y-2 max-h-36 overflow-y-auto scrollbar-thin pr-1">
+        {units.slice(0, 10).map((u, i) => {
           const Icon = iconMap[u.type];
           return (
             <motion.div

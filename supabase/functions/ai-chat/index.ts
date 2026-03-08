@@ -9,13 +9,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   try {
-    const { messages } = await req.json()
+    const { messages, action } = await req.json()
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured')
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceKey)
+
+    // Handle direct actions from the chatbot
+    if (action) {
+      return handleAction(action, supabase, corsHeaders)
+    }
 
     // Fetch latest data to give AI real context
     const [trafficRes, weatherRes, accidentsRes, alertsRes, unitsRes] = await Promise.all([
@@ -26,7 +31,6 @@ Deno.serve(async (req) => {
       supabase.from('emergency_units').select('unit_id, unit_type, status').limit(20),
     ])
 
-    // Zone name mapping
     const ZONE_NAMES: Record<string, string> = {
       z0: 'Andhra Pradesh', z1: 'Arunachal Pradesh', z2: 'Assam', z3: 'Bihar',
       z4: 'Chhattisgarh', z5: 'Goa', z6: 'Gujarat', z7: 'Haryana',
@@ -55,6 +59,25 @@ Deno.serve(async (req) => {
 - Summarize active alerts and emergencies
 - Provide accident reports and severity analysis
 - Track emergency unit (ambulance, fire, police) availability
+- **TRIGGER ACTIONS**: You can dispatch emergency alerts, create traffic advisories, and trigger system actions
+
+## Action Commands
+When a user asks you to take action (like "dispatch units" or "create alert" or "trigger flood warning"), you should include an ACTION block in your response using this exact format:
+
+\`\`\`action
+{"type": "dispatch_alert", "zone_id": "z31", "severity": "critical", "message": "Emergency dispatched to Delhi"}
+\`\`\`
+
+OR
+
+\`\`\`action
+{"type": "create_advisory", "zone_id": "z13", "message": "Traffic advisory: Avoid Western Express Highway"}
+\`\`\`
+
+Available actions:
+- dispatch_alert: Create emergency alert (zone_id, severity, message)
+- create_advisory: Create traffic advisory (zone_id, message)
+- dispatch_unit: Dispatch emergency unit (unit_type: ambulance/fire/police, zone_id)
 
 ## Current Live Data Snapshot
 
@@ -105,7 +128,7 @@ ${JSON.stringify((unitsRes.data || []).map(u => ({
 - For traffic: congestion > 0.7 is "heavy", > 0.5 is "moderate", < 0.3 is "light"
 - Always mention data is LIVE and real-time
 - Be concise but thorough. Use tables for comparisons.
-- If asked about something not in the data, say so honestly.
+- If asked to take an action, ALWAYS include the action block AND confirm what you did.
 - Sign off responses with a relevant emoji`
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -156,3 +179,59 @@ ${JSON.stringify((unitsRes.data || []).map(u => ({
     })
   }
 })
+
+// Handle direct action requests
+async function handleAction(action: any, supabase: any, corsHeaders: Record<string, string>) {
+  try {
+    switch (action.type) {
+      case 'dispatch_alert': {
+        const { error } = await supabase.from('alerts').insert({
+          zone_id: action.zone_id,
+          alert_type: 'emergency',
+          severity: action.severity || 'high',
+          message: action.message || 'Emergency alert dispatched by AI',
+          is_active: true,
+        })
+        if (error) throw error
+        return new Response(JSON.stringify({ success: true, message: 'Alert dispatched' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      case 'create_advisory': {
+        const { error } = await supabase.from('alerts').insert({
+          zone_id: action.zone_id,
+          alert_type: 'traffic_advisory',
+          severity: 'medium',
+          message: action.message || 'Traffic advisory',
+          is_active: true,
+        })
+        if (error) throw error
+        return new Response(JSON.stringify({ success: true, message: 'Advisory created' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      case 'dispatch_unit': {
+        const { error } = await supabase.from('emergency_units')
+          .update({ status: 'dispatched' })
+          .eq('unit_type', action.unit_type)
+          .eq('status', 'available')
+          .limit(1)
+        if (error) throw error
+        return new Response(JSON.stringify({ success: true, message: `${action.unit_type} dispatched` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      default:
+        return new Response(JSON.stringify({ error: 'Unknown action type' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+    }
+  } catch (e) {
+    console.error('Action error:', e)
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'Action failed' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+}

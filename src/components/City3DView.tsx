@@ -83,7 +83,7 @@ function ZoneGroup({ zone, traffic, flood, accidents, onZoneClick }: {
   const zoneAccidents = accidents.filter(a => a.zone === zone.name);
   const cong = t?.congestionLevel ?? 0.2;
 
-  const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+  const handleClick = useCallback((e: any) => {
     e.stopPropagation();
     onZoneClick({
       name: zone.name,

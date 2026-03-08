@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Clock, Target, AlertTriangle, Droplets, Car } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Clock, Target, AlertTriangle, Droplets, Car, Radio } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Prediction {
   zone_id: string;
@@ -19,8 +20,21 @@ export default function AIPredictionsView() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isLive, setIsLive] = useState(false);
+  const [zoneMap, setZoneMap] = useState<Map<string, string>>(new Map());
 
-  const fetchPredictions = async () => {
+  // Fetch zone names once
+  useEffect(() => {
+    const fetchZones = async () => {
+      const { data } = await supabase.from('city_zones').select('zone_id, name');
+      if (data) {
+        setZoneMap(new Map(data.map(z => [z.zone_id, z.name])));
+      }
+    };
+    fetchZones();
+  }, []);
+
+  const fetchPredictions = useCallback(async () => {
     setLoading(true);
     try {
       const { data: predData, error: predError } = await supabase
@@ -30,12 +44,6 @@ export default function AIPredictionsView() {
         .limit(36);
 
       if (predError) throw predError;
-
-      const { data: zonesData } = await supabase
-        .from('city_zones')
-        .select('zone_id, name');
-
-      const zoneMap = new Map(zonesData?.map(z => [z.zone_id, z.name]) || []);
 
       const merged = (predData || []).map(p => ({
         ...p,
@@ -49,13 +57,56 @@ export default function AIPredictionsView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [zoneMap]);
 
+  // Initial fetch
   useEffect(() => {
-    fetchPredictions();
-    const interval = setInterval(fetchPredictions, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    if (zoneMap.size > 0) {
+      fetchPredictions();
+    }
+  }, [zoneMap, fetchPredictions]);
+
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('predictions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'traffic_predictions',
+        },
+        (payload) => {
+          const newPred = payload.new as any;
+          setPredictions(prev => {
+            // Update or add the prediction
+            const exists = prev.find(p => p.zone_id === newPred.zone_id);
+            const updated = exists
+              ? prev.map(p => p.zone_id === newPred.zone_id 
+                  ? { ...newPred, zone_name: zoneMap.get(newPred.zone_id) || newPred.zone_id }
+                  : p)
+              : [...prev, { ...newPred, zone_name: zoneMap.get(newPred.zone_id) || newPred.zone_id }];
+            
+            // Sort by congestion and limit to 36
+            return updated
+              .sort((a, b) => b.current_congestion - a.current_congestion)
+              .slice(0, 36);
+          });
+          setLastUpdated(new Date());
+        }
+      )
+      .subscribe((status) => {
+        setIsLive(status === 'SUBSCRIBED');
+        if (status === 'SUBSCRIBED') {
+          toast.success('Live updates connected', { duration: 2000 });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [zoneMap]);
 
   const avgConfidence = predictions.length
     ? Math.round(predictions.reduce((s, p) => s + p.confidence, 0) / predictions.length)
@@ -97,14 +148,23 @@ export default function AIPredictionsView() {
             </p>
           </div>
         </div>
-        <button
-          onClick={fetchPredictions}
-          disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span className="text-xs font-mono-tech">Refresh</span>
-        </button>
+        <div className="flex items-center gap-4">
+          {/* Live indicator */}
+          <div className="flex items-center gap-2">
+            <Radio className={`w-3.5 h-3.5 ${isLive ? 'text-neon-green animate-pulse' : 'text-muted-foreground'}`} />
+            <span className={`text-xs font-mono-tech ${isLive ? 'text-neon-green' : 'text-muted-foreground'}`}>
+              {isLive ? 'LIVE' : 'CONNECTING...'}
+            </span>
+          </div>
+          <button
+            onClick={fetchPredictions}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="text-xs font-mono-tech">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}

@@ -8,10 +8,14 @@ import FloodPanel from '@/components/FloodPanel';
 import EmergencyPanel from '@/components/EmergencyPanel';
 import AlertsPanel from '@/components/AlertsPanel';
 import AnalyticsPanel from '@/components/AnalyticsPanel';
-import { Activity, Radio, Map, Box, Database, Wifi } from 'lucide-react';
+import { Activity, Radio, Map, Box, Database, Wifi, MessageSquarePlus, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const { traffic, flood, accidents, emergencyUnits, alerts, trafficHistory, floodHistory, useBackend } = useSimulation(5000);
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'3d' | 'map'>('map');
   const [emergencyRoute, setEmergencyRoute] = useState<{ lat: number; lng: number }[]>([]);
   const handleRouteCalculated = useCallback((route: { lat: number; lng: number }[]) => {
@@ -59,6 +63,12 @@ export default function Dashboard() {
               {useBackend ? 'CLOUD' : 'LOCAL'}
             </span>
           </div>
+          <button
+            onClick={() => navigate('/reports')}
+            className="flex items-center gap-1 px-2 py-1 rounded text-xs font-mono-tech bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
+          >
+            <MessageSquarePlus className="w-3 h-3" /> Reports
+          </button>
           <div className="flex items-center gap-2">
             <Radio className="w-3 h-3 text-neon-green animate-pulse-neon" />
             <span className="text-xs font-mono-tech text-neon-green">LIVE</span>
@@ -66,6 +76,9 @@ export default function Dashboard() {
           <span className="text-xs font-mono-tech text-muted-foreground">
             {new Date().toLocaleTimeString()}
           </span>
+          <button onClick={signOut} className="text-muted-foreground hover:text-foreground">
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </header>
 

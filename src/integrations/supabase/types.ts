@@ -74,6 +74,57 @@ export type Database = {
         }
         Relationships: []
       }
+      citizen_reports: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          lat: number | null
+          lng: number | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          vote_count: number
+          zone_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          image_url?: string | null
+          lat?: number | null
+          lng?: number | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          vote_count?: number
+          zone_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          lat?: number | null
+          lng?: number | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          vote_count?: number
+          zone_id?: string
+        }
+        Relationships: []
+      }
       city_zones: {
         Row: {
           created_at: string
@@ -133,6 +184,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      report_votes: {
+        Row: {
+          created_at: string
+          id: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_votes_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "citizen_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       traffic_data: {
         Row: {

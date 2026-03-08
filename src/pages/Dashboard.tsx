@@ -108,6 +108,9 @@ export default function Dashboard() {
 
         {/* Right sidebar */}
         <div className="lg:col-span-1 space-y-4 overflow-y-auto">
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}>
+            <TrafficPredictionPanel />
+          </motion.div>
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
             <AlertsPanel alerts={alerts} />
           </motion.div>

@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Target, AlertTriangle, Radio, ArrowUp } from 'lucide-react';
+import { Brain, TrendingUp, TrendingDown, Minus, RefreshCw, Clock, Radio, ArrowUp, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { INDIAN_ZONES, getZoneName, ZONE_MAP } from '@/lib/india-zones';
 
 interface Prediction {
   zone_id: string;
-  zone_name?: string;
+  zone_name: string;
+  capital: string;
   current_congestion: number;
   predicted_30min: number;
   predicted_60min: number;
@@ -21,14 +23,14 @@ export default function AIPredictionsView() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLive, setIsLive] = useState(false);
-  const [zoneMap, setZoneMap] = useState<Map<string, string>>(new Map());
 
-  useEffect(() => {
-    const fetchZones = async () => {
-      const { data } = await supabase.from('city_zones').select('zone_id, name');
-      if (data) setZoneMap(new Map(data.map(z => [z.zone_id, z.name])));
+  const mapPrediction = useCallback((p: any): Prediction => {
+    const zone = ZONE_MAP[p.zone_id];
+    return {
+      ...p,
+      zone_name: zone?.name || getZoneName(p.zone_id),
+      capital: zone?.capital || '',
     };
-    fetchZones();
   }, []);
 
   const fetchPredictions = useCallback(async () => {
@@ -41,21 +43,19 @@ export default function AIPredictionsView() {
         .limit(36);
       if (error) throw error;
 
-      setPredictions((predData || []).map(p => ({
-        ...p,
-        zone_name: zoneMap.get(p.zone_id) || p.zone_id,
-      })));
+      setPredictions((predData || []).map(mapPrediction));
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to fetch predictions:', err);
+      toast.error('Failed to load predictions');
     } finally {
       setLoading(false);
     }
-  }, [zoneMap]);
+  }, [mapPrediction]);
 
   useEffect(() => {
-    if (zoneMap.size > 0) fetchPredictions();
-  }, [zoneMap, fetchPredictions]);
+    fetchPredictions();
+  }, [fetchPredictions]);
 
   // Realtime subscription
   useEffect(() => {
@@ -64,19 +64,20 @@ export default function AIPredictionsView() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'traffic_predictions' }, (payload) => {
         const n = payload.new as any;
         setPredictions(prev => {
+          const mapped = mapPrediction(n);
           const updated = prev.find(p => p.zone_id === n.zone_id)
-            ? prev.map(p => p.zone_id === n.zone_id ? { ...n, zone_name: zoneMap.get(n.zone_id) || n.zone_id } : p)
-            : [...prev, { ...n, zone_name: zoneMap.get(n.zone_id) || n.zone_id }];
+            ? prev.map(p => p.zone_id === n.zone_id ? mapped : p)
+            : [...prev, mapped];
           return updated.sort((a, b) => b.current_congestion - a.current_congestion).slice(0, 36);
         });
         setLastUpdated(new Date());
       })
       .subscribe((status) => {
         setIsLive(status === 'SUBSCRIBED');
-        if (status === 'SUBSCRIBED') toast.success('Live updates connected', { duration: 2000 });
+        if (status === 'SUBSCRIBED') toast.success('Live predictions connected', { duration: 2000 });
       });
     return () => { supabase.removeChannel(channel); };
-  }, [zoneMap]);
+  }, [mapPrediction]);
 
   const avgCurrent = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.current_congestion, 0) / predictions.length * 100) : 0;
   const avg1h = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.predicted_60min, 0) / predictions.length * 100) : 0;

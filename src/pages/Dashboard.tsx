@@ -85,7 +85,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 min-h-[400px]">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="h-full">
             {viewMode === 'map' ? (
-              <CityMapView traffic={traffic} flood={flood} accidents={accidents} emergencyUnits={emergencyUnits} />
+              <CityMapView traffic={traffic} flood={flood} accidents={accidents} emergencyUnits={emergencyUnits} emergencyRoute={emergencyRoute} />
             ) : (
               <City3DView traffic={traffic} flood={flood} accidents={accidents} />
             )}

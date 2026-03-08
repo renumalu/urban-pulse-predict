@@ -31,7 +31,10 @@ export default function SmartCityControlCenter({ onRouteSelected }: SmartCityCon
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [signalOptimizations, setSignalOptimizations] = useState<SignalOptimization[]>([]);
   const [loading, setLoading] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    try { return typeof Notification !== 'undefined' && Notification.permission === 'granted'; }
+    catch { return false; }
+  });
   const [fromZone, setFromZone] = useState('z31');
   const [toZone, setToZone] = useState('z13');
   const [autoRefresh, setAutoRefresh] = useState(true);

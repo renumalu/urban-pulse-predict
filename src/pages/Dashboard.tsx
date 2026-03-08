@@ -8,6 +8,7 @@ import TrafficView from '@/pages/dashboard/TrafficView';
 import FloodView from '@/pages/dashboard/FloodView';
 import EmergencyView from '@/pages/dashboard/EmergencyView';
 import AnalyticsView from '@/pages/dashboard/AnalyticsView';
+import AIPredictionsView from '@/pages/dashboard/AIPredictionsView';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Box, Map, Database, Wifi } from 'lucide-react';
 

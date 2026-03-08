@@ -6,7 +6,10 @@ const corsHeaders = {
 }
 
 const ZONE_ELEVATIONS: Record<string, number> = {
-  z0: 10, z1: 15, z2: 3, z3: 20, z4: 12, z5: 2, z6: 18, z7: 8, z8: 25, z9: 22, z10: 14, z11: 30,
+  z0: 200, z1: 1500, z2: 55, z3: 53, z4: 300, z5: 37, z6: 81, z7: 220, z8: 2200, z9: 650,
+  z10: 920, z11: 10, z12: 500, z13: 14, z14: 790, z15: 1500, z16: 1100, z17: 1500, z18: 45,
+  z19: 230, z20: 431, z21: 1650, z22: 6, z23: 542, z24: 13, z25: 123, z26: 640, z27: 11,
+  z28: 16, z29: 321, z30: 12, z31: 216, z32: 1585, z33: 3500, z34: 2, z35: 6,
 }
 
 Deno.serve(async (req) => {
@@ -19,18 +22,18 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceKey)
 
-    // Get latest weather data
     const { data: weatherData, error } = await supabase
       .from('weather_data')
       .select('*')
       .order('recorded_at', { ascending: false })
-      .limit(12)
+      .limit(36)
 
     if (error) throw error
 
+    const maxElev = 3500
     const simulation = (weatherData || []).map(w => {
-      const elevation = ZONE_ELEVATIONS[w.zone_id] || 10
-      const riskLevel = Math.max(0, Math.min(1, (w.rainfall / 80) * (1 - elevation / 35)))
+      const elevation = ZONE_ELEVATIONS[w.zone_id] || 100
+      const riskLevel = Math.max(0, Math.min(1, (w.rainfall / 80) * (1 - elevation / maxElev)))
       const waterLevel = riskLevel * 2.5
       return {
         zone_id: w.zone_id,

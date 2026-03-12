@@ -14,6 +14,10 @@ import LiveAlertsView from '@/pages/dashboard/LiveAlertsView';
 import CrisisSolutionView from '@/pages/dashboard/CrisisSolutionView';
 import DataStreamsView from '@/pages/dashboard/DataStreamsView';
 import EmergencyResponseView from '@/pages/dashboard/EmergencyResponseView';
+import AirQualityView from '@/pages/dashboard/AirQualityView';
+import NoisePollutionView from '@/pages/dashboard/NoisePollutionView';
+import TransportView from '@/pages/dashboard/TransportView';
+import PowerGridView from '@/pages/dashboard/PowerGridView';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Box, Map, Database, Wifi } from 'lucide-react';
 

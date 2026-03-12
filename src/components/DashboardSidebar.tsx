@@ -25,6 +25,13 @@ const mainNav = [
   { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3, color: 'text-neon-green' },
 ];
 
+const environmentNav = [
+  { title: 'Air Quality Index', url: '/dashboard/air-quality', icon: Wind, color: 'text-neon-green' },
+  { title: 'Noise Pollution', url: '/dashboard/noise', icon: Volume2, color: 'text-neon-orange' },
+  { title: 'Public Transport', url: '/dashboard/transport', icon: Bus, color: 'text-neon-cyan' },
+  { title: 'Power Grid', url: '/dashboard/power-grid', icon: Zap, color: 'text-warning' },
+];
+
 const controlNav = [
   { title: 'Smart City Control', url: '/dashboard/control', icon: BrainCircuit, color: 'text-neon-purple' },
   { title: 'Emergency Response', url: '/dashboard/response', icon: Siren, color: 'text-neon-red' },

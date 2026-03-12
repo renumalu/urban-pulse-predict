@@ -44,6 +44,48 @@ export type Database = {
         }
         Relationships: []
       }
+      air_quality_data: {
+        Row: {
+          aqi: number
+          category: string
+          co: number
+          id: string
+          no2: number
+          o3: number
+          pm10: number
+          pm25: number
+          recorded_at: string
+          so2: number
+          zone_id: string
+        }
+        Insert: {
+          aqi?: number
+          category?: string
+          co?: number
+          id?: string
+          no2?: number
+          o3?: number
+          pm10?: number
+          pm25?: number
+          recorded_at?: string
+          so2?: number
+          zone_id: string
+        }
+        Update: {
+          aqi?: number
+          category?: string
+          co?: number
+          id?: string
+          no2?: number
+          o3?: number
+          pm10?: number
+          pm25?: number
+          recorded_at?: string
+          so2?: number
+          zone_id?: string
+        }
+        Relationships: []
+      }
       alerts: {
         Row: {
           alert_type: string
@@ -185,6 +227,75 @@ export type Database = {
         }
         Relationships: []
       }
+      noise_data: {
+        Row: {
+          category: string
+          decibel_level: number
+          id: string
+          near_sensitive_area: boolean
+          recorded_at: string
+          source: string
+          zone_id: string
+        }
+        Insert: {
+          category?: string
+          decibel_level?: number
+          id?: string
+          near_sensitive_area?: boolean
+          recorded_at?: string
+          source?: string
+          zone_id: string
+        }
+        Update: {
+          category?: string
+          decibel_level?: number
+          id?: string
+          near_sensitive_area?: boolean
+          recorded_at?: string
+          source?: string
+          zone_id?: string
+        }
+        Relationships: []
+      }
+      power_grid_data: {
+        Row: {
+          capacity_mw: number
+          frequency_hz: number
+          id: string
+          load_mw: number
+          load_percent: number
+          outage_active: boolean
+          outage_duration_min: number
+          recorded_at: string
+          status: string
+          zone_id: string
+        }
+        Insert: {
+          capacity_mw?: number
+          frequency_hz?: number
+          id?: string
+          load_mw?: number
+          load_percent?: number
+          outage_active?: boolean
+          outage_duration_min?: number
+          recorded_at?: string
+          status?: string
+          zone_id: string
+        }
+        Update: {
+          capacity_mw?: number
+          frequency_hz?: number
+          id?: string
+          load_mw?: number
+          load_percent?: number
+          outage_active?: boolean
+          outage_duration_min?: number
+          recorded_at?: string
+          status?: string
+          zone_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -303,6 +414,42 @@ export type Database = {
           predicted_30min?: number
           predicted_60min?: number
           trend?: string
+          zone_id?: string
+        }
+        Relationships: []
+      }
+      transport_data: {
+        Row: {
+          eta_minutes: number
+          id: string
+          occupancy_percent: number
+          recorded_at: string
+          route_name: string
+          status: string
+          transport_type: string
+          vehicle_id: string
+          zone_id: string
+        }
+        Insert: {
+          eta_minutes?: number
+          id?: string
+          occupancy_percent?: number
+          recorded_at?: string
+          route_name?: string
+          status?: string
+          transport_type?: string
+          vehicle_id?: string
+          zone_id: string
+        }
+        Update: {
+          eta_minutes?: number
+          id?: string
+          occupancy_percent?: number
+          recorded_at?: string
+          route_name?: string
+          status?: string
+          transport_type?: string
+          vehicle_id?: string
           zone_id?: string
         }
         Relationships: []

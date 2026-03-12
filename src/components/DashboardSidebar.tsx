@@ -103,6 +103,8 @@ export function DashboardSidebar() {
       <SidebarContent className="py-2">
         {renderNavGroup(mainNav, 'MONITORING')}
         {!collapsed && <div className="mx-3 border-t border-border my-1" />}
+        {renderNavGroup(environmentNav, 'ENVIRONMENT & INFRA')}
+        {!collapsed && <div className="mx-3 border-t border-border my-1" />}
         {renderNavGroup(controlNav, 'CONTROL CENTER')}
         {!collapsed && <div className="mx-3 border-t border-border my-1" />}
         {renderNavGroup(extNav, 'EXTERNAL')}

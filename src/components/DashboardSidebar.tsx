@@ -1,4 +1,4 @@
-import { Car, CloudRain, Ambulance, BarChart3, Map, Radio, LogOut, Activity, FileText, Brain, BrainCircuit, Bell, Wifi, Shield, Siren } from 'lucide-react';
+import { Car, CloudRain, Ambulance, BarChart3, Map, Radio, LogOut, Activity, FileText, Brain, BrainCircuit, Bell, Wifi, Shield, Siren, Wind, Volume2, Bus, Zap } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {

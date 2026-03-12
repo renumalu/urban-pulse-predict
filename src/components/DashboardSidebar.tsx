@@ -1,4 +1,4 @@
-import { Car, CloudRain, Ambulance, BarChart3, Map, Radio, LogOut, Activity, FileText, Brain, BrainCircuit, Bell, Wifi, Shield, Siren } from 'lucide-react';
+import { Car, CloudRain, Ambulance, BarChart3, Map, Radio, LogOut, Activity, FileText, Brain, BrainCircuit, Bell, Wifi, Shield, Siren, Wind, Volume2, Bus, Zap } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -23,6 +23,13 @@ const mainNav = [
   { title: 'Emergency Control', url: '/dashboard/emergency', icon: Ambulance, color: 'text-neon-red' },
   { title: 'AI Predictions', url: '/dashboard/predictions', icon: Brain, color: 'text-neon-purple' },
   { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3, color: 'text-neon-green' },
+];
+
+const environmentNav = [
+  { title: 'Air Quality Index', url: '/dashboard/air-quality', icon: Wind, color: 'text-neon-green' },
+  { title: 'Noise Pollution', url: '/dashboard/noise', icon: Volume2, color: 'text-neon-orange' },
+  { title: 'Public Transport', url: '/dashboard/transport', icon: Bus, color: 'text-neon-cyan' },
+  { title: 'Power Grid', url: '/dashboard/power-grid', icon: Zap, color: 'text-warning' },
 ];
 
 const controlNav = [
@@ -95,6 +102,8 @@ export function DashboardSidebar() {
 
       <SidebarContent className="py-2">
         {renderNavGroup(mainNav, 'MONITORING')}
+        {!collapsed && <div className="mx-3 border-t border-border my-1" />}
+        {renderNavGroup(environmentNav, 'ENVIRONMENT & INFRA')}
         {!collapsed && <div className="mx-3 border-t border-border my-1" />}
         {renderNavGroup(controlNav, 'CONTROL CENTER')}
         {!collapsed && <div className="mx-3 border-t border-border my-1" />}

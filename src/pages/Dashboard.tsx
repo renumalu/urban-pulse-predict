@@ -14,6 +14,10 @@ import LiveAlertsView from '@/pages/dashboard/LiveAlertsView';
 import CrisisSolutionView from '@/pages/dashboard/CrisisSolutionView';
 import DataStreamsView from '@/pages/dashboard/DataStreamsView';
 import EmergencyResponseView from '@/pages/dashboard/EmergencyResponseView';
+import AirQualityView from '@/pages/dashboard/AirQualityView';
+import NoisePollutionView from '@/pages/dashboard/NoisePollutionView';
+import TransportView from '@/pages/dashboard/TransportView';
+import PowerGridView from '@/pages/dashboard/PowerGridView';
 import AIChatWidget from '@/components/AIChatWidget';
 import { Box, Map, Database, Wifi } from 'lucide-react';
 
@@ -128,6 +132,10 @@ export default function Dashboard() {
               } />
               <Route path="streams" element={<DataStreamsView />} />
               <Route path="response" element={<EmergencyResponseView />} />
+              <Route path="air-quality" element={<AirQualityView />} />
+              <Route path="noise" element={<NoisePollutionView />} />
+              <Route path="transport" element={<TransportView />} />
+              <Route path="power-grid" element={<PowerGridView />} />
             </Routes>
           </main>
         </div>

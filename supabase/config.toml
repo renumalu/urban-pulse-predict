@@ -1,5 +1,8 @@
 project_id = "sysemmopgzgvmepuzcrb"
 
+[functions.simulate-environment]
+verify_jwt = false
+
 [functions.simulate-data]
 verify_jwt = false
 
